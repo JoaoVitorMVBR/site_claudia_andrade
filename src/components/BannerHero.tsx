@@ -27,7 +27,7 @@ const BannerHero: React.FC = () => {
         </h1>
         <Link
           href="/vestidos"
-          className="inline-block bg-[#cc936b] text-[#641311] font-moondance text-lg md:text-xl py-3 px-6 rounded-md hover:bg-[#cc936b]/80 transition-colors duration-300"
+          className="inline-block bg-[#cc936b] text-[#641311] font-[Poppins-light] text-xs md:text-xs  py-3 px-6 rounded-md hover:bg-[#cc936b]/80 transition-colors duration-300"
         >
           Ver Coleção
         </Link>
