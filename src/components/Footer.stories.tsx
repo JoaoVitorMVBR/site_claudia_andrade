@@ -1,19 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import BannerHero from './BannerHero'
-import BannerHaero from '../../public/images/zara.jpg'
+import Footer from './Footer'
 
-const meta: Meta<typeof BannerHero> = {
-  title: 'Components/BannerHero',
-  component: BannerHero,
+const meta: Meta<typeof Footer> = {
+  title: 'Components/Footer',
+  component: Footer,
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
   tags: ['autodocs'],
 }
 
 export default meta
 
-type Story = StoryObj<typeof BannerHero>
+type Story = StoryObj<typeof Footer>
 
 export const Default: Story = {
   args: {},

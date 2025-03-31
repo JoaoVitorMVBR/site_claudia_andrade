@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import Image from 'next/image';
+import Link from 'next/link'
+import Image from 'next/image'
 
 const BannerHero: React.FC = () => {
   return (
@@ -33,7 +33,7 @@ const BannerHero: React.FC = () => {
         </Link>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default BannerHero;
+export default BannerHero

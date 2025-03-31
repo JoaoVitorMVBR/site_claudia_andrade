@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import ProductGrid from './ProductGrid';
+import type { Meta, StoryObj } from '@storybook/react'
+import ProductGrid from './ProductGrid'
 
 const meta: Meta<typeof ProductGrid> = {
   title: 'Components/ProductGrid',
@@ -8,15 +8,15 @@ const meta: Meta<typeof ProductGrid> = {
     layout: 'centered',
   },
   tags: ['autodocs'],
-};
+}
 
-export default meta;
+export default meta
 
-type Story = StoryObj<typeof ProductGrid>;
+type Story = StoryObj<typeof ProductGrid>
 
 export const Default: Story = {
   args: {},
-};
+}
 
 export const Mobile: Story = {
   args: {},
@@ -32,4 +32,4 @@ export const Mobile: Story = {
       defaultViewport: 'mobile1',
     },
   },
-};
+}

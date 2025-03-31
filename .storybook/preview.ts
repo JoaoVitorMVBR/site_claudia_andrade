@@ -1,5 +1,5 @@
-import type { Preview } from '@storybook/react';
-import '../src/app/globals.css'; // Importe seu CSS global que inclui o Tailwind
+import type { Preview } from '@storybook/react'
+import '../src/app/globals.css' // Importe seu CSS global que inclui o Tailwind
 
 const preview: Preview = {
   parameters: {
@@ -11,6 +11,6 @@ const preview: Preview = {
       },
     },
   },
-};
+}
 
-export default preview;
+export default preview

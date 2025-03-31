@@ -1,26 +1,30 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from 'next/link'
+import { useState } from 'react'
 
 // Definindo a interface para os itens do menu
 interface NavItem {
-  name: string;
-  href: string;
+  name: string
+  href: string
 }
 
 const Navbar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false)
 
   const navItems: NavItem[] = [
     { name: 'Home', href: '/' },
     { name: 'Vestidos', href: '/vestidos' },
     { name: 'Contato', href: '/contato' },
     { name: 'Sobre Nós', href: '/sobre' },
-  ];
+  ]
 
-  const LinkWrapper = ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => {
-    const isStorybook = typeof window === 'undefined';
+  const LinkWrapper = ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => {
+    const isStorybook = typeof window === 'undefined'
     return isStorybook ? (
       <a href={href} {...props}>
         {children}
@@ -29,8 +33,8 @@ const Navbar: React.FC = () => {
       <Link href={href} {...props}>
         {children}
       </Link>
-    );
-  };
+    )
+  }
 
   return (
     <nav className="bg-[#641311] text-white fixed w-full z-20 top-0 shadow-lg transition-all duration-300">
@@ -45,12 +49,32 @@ const Navbar: React.FC = () => {
             >
               <span className="sr-only">Abrir menu</span>
               {isOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </button>
@@ -72,7 +96,7 @@ const Navbar: React.FC = () => {
               <LinkWrapper
                 key={item.name}
                 href={item.href}
-                className="font-[Poppins-light] text-[#cc936b] text-lg md:text-xl relative group hover:text-white transition-colors duration-200"
+                className="font-[Poppins-light] text-[#cc936b] text-base md:text-sm relative group hover:text-white transition-colors duration-200"
               >
                 {item.name}
                 <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#cc936b] group-hover:w-full transition-all duration-300 ease-in-out" />
@@ -103,7 +127,7 @@ const Navbar: React.FC = () => {
         )}
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

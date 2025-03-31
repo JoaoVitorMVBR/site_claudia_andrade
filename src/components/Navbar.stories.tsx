@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import Navbar from './Navbar';
+import type { Meta, StoryObj } from '@storybook/react'
+import Navbar from './Navbar'
 
 const meta: Meta<typeof Navbar> = {
   title: 'Components/Navbar',
@@ -8,12 +8,12 @@ const meta: Meta<typeof Navbar> = {
     layout: 'fullscreen', // Faz o componente ocupar toda a tela no Storybook
   },
   tags: ['autodocs'],
-};
+}
 
-export default meta;
+export default meta
 
-type Story = StoryObj<typeof Navbar>;
+type Story = StoryObj<typeof Navbar>
 
 export const Default: Story = {
   args: {},
-};
+}
