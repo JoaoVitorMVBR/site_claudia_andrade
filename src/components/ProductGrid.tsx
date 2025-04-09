@@ -72,12 +72,12 @@ const ProductGrid: React.FC = () => {
               href={`/produtos/${product.slug}`}
               className="group block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
-              <div className="relative w-full h-64">
+              <div className="relative w-full aspect-[3/4]">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
-                  className="object-cover object-center"
+                  className="object-contain object-center"
                   quality={75}
                 />
               </div>
