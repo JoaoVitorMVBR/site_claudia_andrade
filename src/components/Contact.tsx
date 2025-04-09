@@ -28,7 +28,7 @@ const Contact: React.FC = () => {
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="font-[Poppins-light] text-3xl md:text-4xl text-[#641311] text-center mb-8 tracking-wide">
-          Entre em Contato
+            Fale Conosco
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -93,11 +93,7 @@ const Contact: React.FC = () => {
 
           {/* Informações de Contato */}
           <div className="flex flex-col justify-center space-y-6">
-            <div className="text-center">
-              <h3 className="font-[Poppins-light] text-2xl text-[#641311] mb-2">Fale Conosco</h3>
-              <p className="text-gray-700 font-[Poppins-light]">Estamos aqui para ajudar você!</p>
-            </div>
-            <div className="space-y-4">
+            <div className="space-y-4 text-center">
               <p className="text-[#641311]">
                 <span className="font-[Poppins-light]">E-mail:</span>{' '}
                 <a href="mailto:contato@ateliesofia.com" className="font-[Poppins-light] text-[#cc936b] hover:underline">
