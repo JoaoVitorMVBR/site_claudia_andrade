@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-[#641311] text-white py-8 w-full m-0">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center text-center">
           {/* Logo */}
           <div className="flex flex-col items-center md:items-start">
             <Link
