@@ -42,7 +42,7 @@ const FAQSection: React.FC = () => {
     <section className="bg-white min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full">
       <div className="w-full mx-auto">
         {/* Título */}
-        <h2 className="font-[Poppins-light] text-3xl font-bold text-[#641311] text-center mb-8">
+        <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8">
           Perguntas Frequentes
         </h2>
 

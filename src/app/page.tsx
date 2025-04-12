@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import HeroBanner from '@/components/BannerHero';
 import FAQSection from '@/components/Faq';
 import Footer from '@/components/Footer';
+import WhyRent from '@/components/WhyRent'
 
 export default function HomePage() {
   return (
@@ -17,6 +18,9 @@ export default function HomePage() {
         {/* Banner Hero */}
         <HeroBanner />
 
+        {/* porque alugar */}
+        <WhyRent/>
+        
         {/* FAQ Section */}
         <FAQSection />
       </main>
