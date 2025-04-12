@@ -4,6 +4,11 @@ import HeroBanner from '@/components/BannerHero';
 import FAQSection from '@/components/Faq';
 import Footer from '@/components/Footer';
 import WhyRent from '@/components/WhyRent'
+<<<<<<< HEAD
+=======
+import Highlights from '@/components/Highlights'
+
+>>>>>>> feature/WhyRent
 
 export default function HomePage() {
   return (
@@ -18,6 +23,12 @@ export default function HomePage() {
         {/* Banner Hero */}
         <HeroBanner />
 
+<<<<<<< HEAD
+=======
+        {/* Destaques */}
+        <Highlights/>
+        
+>>>>>>> feature/WhyRent
         {/* porque alugar */}
         <WhyRent/>
         
