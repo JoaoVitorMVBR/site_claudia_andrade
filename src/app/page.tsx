@@ -3,6 +3,9 @@ import Navbar from '@/components/Navbar';
 import HeroBanner from '@/components/BannerHero';
 import FAQSection from '@/components/Faq';
 import Footer from '@/components/Footer';
+import Highlights from '@/components/Highlights';
+import WhyRent from '@/components/WhyRent';
+import SocialProof from '@/components/SocialProof';
 
 export default function HomePage() {
   return (
@@ -14,10 +17,10 @@ export default function HomePage() {
 
       {/* Conteúdo Principal */}
       <main className="flex-grow">
-        {/* Banner Hero */}
         <HeroBanner />
-        
-        {/* FAQ Section */}
+        <Highlights />
+        <WhyRent />
+        <SocialProof />
         <FAQSection />
       </main>
 

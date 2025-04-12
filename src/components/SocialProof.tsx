@@ -10,19 +10,19 @@ const SocialProof: React.FC = () => {
       name: 'Ana Silva',
       text: 'Alugar meu vestido no Ateliê Sofia foi uma experiência incrível! O atendimento foi impecável, e o vestido era simplesmente perfeito.',
       rating: 5,
-      image: 'https://via.placeholder.com/80.png?text=Ana',
+      image: '/images/imgWoman.jpeg',
     },
     {
       name: 'Mariana Costa',
       text: 'Os vestidos são de altíssima qualidade, e o processo de aluguel é super prático. Me senti uma verdadeira princesa no meu evento!',
       rating: 5,
-      image: 'https://via.placeholder.com/80.png?text=Mariana',
+      image: '/images/imgWoman.jpeg',
     },
     {
       name: 'Beatriz Lima',
       text: 'Amei a exclusividade das peças e a atenção aos detalhes. Recomendo o Ateliê Sofia para qualquer ocasião especial!',
       rating: 4,
-      image: 'https://via.placeholder.com/80.png?text=Beatriz',
+      image: '/images/imgWoman.jpeg',
     },
   ];
 
