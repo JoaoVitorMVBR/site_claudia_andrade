@@ -25,11 +25,11 @@ const WhyRent: React.FC = () => {
           <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8 tracking-wide">
             Por que Alugar um Vestido?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 ">
             {reasons.map((reason, index) => (
               <div
                 key={index}
-                className="bg-white border border-[#cc936b] rounded-lg p-6 shadow-md text-center"
+                className="bg-white border border-[#cc936b] rounded-lg p-6 shadow-md text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2">
                   {reason.title}
