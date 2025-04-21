@@ -29,7 +29,7 @@ const SocialProof: React.FC = () => {
   return (
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-[Poppins-light] text-3xl md:text-4xl text-[#641311] text-center mb-8 tracking-wide">
+        <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8 tracking-wide">
           O que Nossas Clientes Dizem
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

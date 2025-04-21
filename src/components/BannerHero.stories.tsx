@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import BannerHero from './BannerHero'
-import BannerHaero from '../../public/images/zara.jpg'
 
 const meta: Meta<typeof BannerHero> = {
   title: 'Components/BannerHero',

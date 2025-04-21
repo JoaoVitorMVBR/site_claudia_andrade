@@ -17,10 +17,10 @@ const ProductGrid: React.FC = () => {
   const products: Product[] = [
     {
       id: 1,
-      name: 'Vestido Floral',
+      name: 'Vestido vitoria',
       price: 'R$ 299,00',
-      image: '/images/vestido1.jpg',
-      slug: 'vestido-floral',
+      image: '/images/vitoria.jpg',
+      slug: 'vestido-vitoria',
     },
     {
       id: 2,
