@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import DressDetail from '@/components/DressDetail';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -5,44 +8,65 @@ import { notFound } from 'next/navigation';
 
 // Definir tipo do vestido
 interface Dress {
-  id: number;
-  name: string;
-  price: string;
-  description: string;
+  id: string;
+  nome: string;
+  preco: string;
+  bordados: string;
+  comprimento: string;
+  descricao: string;
+  cor: string;
+  manga: string;
+  marca: string;
+  tamanho: string;
+  codigoProduto: string;
   frontImage: string;
   backImage: string;
   slug: string;
 }
 
-// Array local de vestidos
-const dresses: Dress[] = [
-  {
-	id: 1,
-	name: 'Vestido Vitoria',
-	price: 'R$ 399,90',
-	description:
-  	'Um vestido elegante com detalhes brilhantes, perfeito para ocasiões especiais. Confeccionado com tecidos de alta qualidade, garante conforto e sofisticação.',
-	frontImage: '/images/vitoria.jpg',
-	backImage: '/images/vitoria-verso.jpg',
-	slug: 'vestido-vitoria',
-  },
-]
+export default function DressDetailPage({ params }: { params: { slug: string } }) {
+  const [dress, setDress] = useState<Dress | null>(null);
+  const [loading, setLoading] = useState(true);
 
-// Definir tipo dos props de forma flexível
-type tParams = Promise<{ slug: string }>;
+  useEffect(() => {
+    const fetchDress = async () => {
+      try {
+        const docRef = doc(db, 'vestidos', params.slug);
+        const docSnap = await getDoc(docRef);
 
-export async function generateStaticParams() {
-  return dresses.map((dress) => ({ slug: dress.slug }));
-}
+        if (docSnap.exists()) {
+          setDress({ id: docSnap.id, ...docSnap.data() } as Dress);
+        } else {
+          setDress(null);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar vestido:', error);
+        setDress(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default async function DressDetailPage({ params }: { params: tParams }) {
-  // Resolver params, caso seja um Promise
-  const { slug }: { slug: string } = await params;
-  // Buscar o vestido pelo slug no array local
-  const dress = dresses.find((d) => d.slug === slug);
+    fetchDress();
+  }, [params.slug]);
 
-  // console.log('params:', params, typeof params);
-  // console.log('resolvedParams:', resolvedParams);
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#FFFFFF]">
+        <header>
+          <Navbar />
+        </header>
+        <main className="flex-grow flex items-center justify-center">
+          <p className="font-[Poppins-light] text-xl text-[#641311]">
+            Carregando...
+          </p>
+        </main>
+        <footer>
+          <Footer />
+        </footer>
+      </div>
+    );
+  }
 
   if (!dress) {
     notFound(); // Aciona a página 404 do Next.js

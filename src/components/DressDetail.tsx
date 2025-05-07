@@ -6,10 +6,17 @@ import Image from 'next/image';
 import { FaSearchPlus, FaTimes } from 'react-icons/fa';
 
 interface Dress {
-  id: number;
-  name: string;
-  price: string;
-  description: string;
+  id: string;
+  nome: string;
+  preco: string;
+  bordados: string;
+  comprimento: string;
+  descricao: string;
+  cor: string;
+  manga: string;
+  marca: string;
+  tamanho: string;
+  codigoProduto: string;
   frontImage: string;
   backImage: string;
   slug: string;
@@ -30,7 +37,7 @@ const DressDetail: React.FC<{ dress: Dress }> = ({ dress }) => {
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="font-[Poppins-light] text-3xl md:text-4xl text-[#641311] text-center mb-8 tracking-wide">
-          {dress.name}
+          {dress.nome}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Imagens */}
@@ -39,10 +46,13 @@ const DressDetail: React.FC<{ dress: Dress }> = ({ dress }) => {
             <div className="relative w-full sm:w-1/2 aspect-[3/4] group">
               <Image
                 src={dress.frontImage}
-                alt={`${dress.name} - Frente`}
+                alt={`${dress.nome} - Frente`}
                 fill
                 className="object-contain object-center rounded-lg "
                 quality={75}
+                // onError={(e) => {
+                //   e.currentTarget.src = fallbackImage;
+                // }}
               />
               <button
                 onClick={() => openZoom(dress.frontImage)}
@@ -56,7 +66,7 @@ const DressDetail: React.FC<{ dress: Dress }> = ({ dress }) => {
             <div className="relative w-full sm:w-1/2 aspect-[3/4] group">
               <Image
                 src={dress.backImage}
-                alt={`${dress.name} - Verso`}
+                alt={`${dress.nome} - Verso`}
                 fill
                 className="object-contain object-center rounded-lg "
                 quality={75}
@@ -74,10 +84,19 @@ const DressDetail: React.FC<{ dress: Dress }> = ({ dress }) => {
           {/* Detalhes */}
           <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left">
             <p className="font-[Poppins-light] text-2xl text-[#cc936b] mb-4">
-              {dress.price}
+              {dress.preco}
             </p>
+            <div className="font-[Poppins-light] text-gray-700 text-base sm:text-lg mb-6 space-y-2">
+              <p><strong>Bordados:</strong> {dress.bordados}</p>
+              <p><strong>Comprimento:</strong> {dress.comprimento}</p>
+              <p><strong>Cor:</strong> {dress.cor}</p>
+              <p><strong>Manga:</strong> {dress.manga}</p>
+              <p><strong>Marca:</strong> {dress.marca}</p>
+              <p><strong>Tamanho:</strong> {dress.tamanho}</p>
+              <p><strong>Código do Produto:</strong> {dress.codigoProduto}</p>
+            </div>
             <p className="font-[Poppins-light] text-gray-700 text-base sm:text-lg mb-6">
-              {dress.description}
+              {dress.descricao}
             </p>
             <button className="bg-[#641311] text-white py-2 px-6 rounded-md hover:bg-[#cc936b] transition-colors duration-300 font-[Poppins-light]">
               Alugar Agora
@@ -102,6 +121,9 @@ const DressDetail: React.FC<{ dress: Dress }> = ({ dress }) => {
                 fill
                 className="object-contain"
                 quality={100}
+                // onError={(e) => {
+                //   e.currentTarget.src = fallbackImage;
+                // }}
               />
             </div>
           </div>
