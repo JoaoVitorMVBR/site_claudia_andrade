@@ -11,13 +11,13 @@ import { NavItem, Product } from '../types'; // Importa os tipos
 export const navItems: NavItem[] = [
   { name: 'Dashboard', href: '#', icon: LayoutDashboard },
   { name: 'Products', href: '#', icon: Shirt, current: true },
-  { name: 'Orders', href: '#', icon: ShoppingCart },
-  { name: 'Customers', href: '#', icon: Users },
+  // { name: 'Orders', href: '#', icon: ShoppingCart },
+  // { name: 'Customers', href: '#', icon: Users },
 ];
 
 export const utilityItems: NavItem[] = [
-  { name: 'Settings', href: '#', icon: Settings },
-  { name: 'Help and docs', href: '#', icon: SquareDashedKanban },
+  // { name: 'Settings', href: '#', icon: Settings },
+  // { name: 'Help and docs', href: '#', icon: SquareDashedKanban },
 ];
 
 export const products: Product[] = [

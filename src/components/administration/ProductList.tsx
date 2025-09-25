@@ -63,14 +63,14 @@ const ProductList: React.FC = () => {
     <div className="flex-1 p-4 md:p-8">
       
       {/* 1. Header and Search (Usando Flexbox para o alinhamento do título e futuros botões) */}
-      <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-[Poppins-light]">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           Listar/Gerenciar Peças
         </h1>
         
         {/* Campo de Busca Principal - Ocupa a largura total no mobile */}
         <div className="relative w-full md:w-1/3">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none font-[Poppins-light]">
             <Search className="w-5 h-5 text-gray-400" />
           </div>
           <input
@@ -78,7 +78,7 @@ const ProductList: React.FC = () => {
             placeholder="Buscar por nome ou tipo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-[Poppins-light]"
           />
         </div>
       </header>
@@ -90,7 +90,7 @@ const ProductList: React.FC = () => {
           <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
           >
               <option value="">Todos os Tipos</option>
               {filterOptions.types.map(option => (
@@ -102,7 +102,7 @@ const ProductList: React.FC = () => {
           <select
               value={filters.color}
               onChange={(e) => handleFilterChange('color', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
           >
               <option value="">Todas as Cores</option>
               {filterOptions.colors.map(option => (
@@ -114,7 +114,7 @@ const ProductList: React.FC = () => {
           <select
               value={filters.size}
               onChange={(e) => handleFilterChange('size', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
           >
               <option value="">Todos os Tamanhos</option>
               {filterOptions.sizes.map(option => (
@@ -126,7 +126,7 @@ const ProductList: React.FC = () => {
           {(filters.type || filters.color || filters.size || searchTerm) && (
               <button
                   onClick={() => { setSearchTerm(''); setFilters({ type: '', color: '', size: '' }); }}
-                  className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-150 min-w-fit"
+                  className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-150 min-w-fit font-[Poppins-light]"
               >
                   Limpar
               </button>
@@ -139,22 +139,22 @@ const ProductList: React.FC = () => {
         <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
                 IMAGE
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[150px]">
                 NOME
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
                 TIPO
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
                 COR
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
                 TAM
               </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[100px]">
                 AÇÕES
               </th>
             </tr>
@@ -163,7 +163,7 @@ const ProductList: React.FC = () => {
             {filteredProducts.map((product) => (
               <tr key={product.id}>
                 {/* Imagem */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-[Poppins-light]">
                   <div className="relative h-10 w-10">
                     <Image
                       src={product.image}
@@ -175,28 +175,21 @@ const ProductList: React.FC = () => {
                   </div>
                 </td>
                 
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-[Poppins-light] text-gray-900">
                   {product.name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
                   {product.type}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
                   {product.color}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
                   {product.size}
                 </td>
                 
                 {/* Botões de Ação */}
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                  <button 
-                    onClick={() => handleEdit(product)}
-                    className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
-                    title="Editar"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
                   <button 
                     onClick={() => handleRemove(product.id)}
                     className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
