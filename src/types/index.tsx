@@ -1,9 +1,15 @@
+// types.ts (Adicionar este tipo)
+
 import { LucideIcon } from 'lucide-react';
 
-// 1. Tipo para Itens de Navegação da Sidebar
+// Novo tipo que define as telas que o Layout pode exibir
+export type AdminView = 'dashboard' | 'products' | 'addProduct';
+
+
+// 1. Tipo para Itens de Navegação da Sidebar (Ajustado para usar AdminView)
 export interface NavItem {
   name: string;
-  href: string;
+  href: AdminView; // ALTERADO: Agora é o tipo AdminView, não string.
   icon: LucideIcon;
   current?: boolean;
 }

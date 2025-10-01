@@ -9,8 +9,10 @@ import {
 import { NavItem, Product } from '../types'; // Importa os tipos
 
 export const navItems: NavItem[] = [
-  { name: 'Dashboard', href: '#', icon: LayoutDashboard },
-  { name: 'Products', href: '#', icon: Shirt, current: true },
+  { name: 'Dashboard', href: 'dashboard', icon: LayoutDashboard },
+  { name: 'Produtos', href: 'products', icon: Shirt, current: true },
+  { name: 'Adicionar roupa', href: 'products', icon: Shirt},
+
   // { name: 'Orders', href: '#', icon: ShoppingCart },
   // { name: 'Customers', href: '#', icon: Users },
 ];
