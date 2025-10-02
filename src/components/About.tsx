@@ -24,7 +24,13 @@ const About: React.FC = () => {
           Sobre Nós
         </h2>
         <p className="font-[Poppins-light] text-base sm:text-lg md:text-xl text-white max-w-2xl px-4">
-          No Ateliê Sofia, criamos vestidos únicos com paixão e dedicação. Cada peça é feita sob medida para realçar a beleza e a personalidade de quem a veste. Nossa missão é transformar momentos especiais em memórias inesquecíveis.
+          Fundada em 2007, a Loja de Locação de Vestidos Cláudia Andrade nasceu da paixão de Cláudia Andrade pela moda e pela crença no poder de um vestido transformar a autoestima de uma mulher.
+
+          Tudo começou de forma simples, em uma pequena sala comercial, onde Cláudia dedicava-se pessoalmente a cada detalhe, desde o atendimento até os ajustes. O atendimento personalizado e a qualidade dos vestidos impulsionaram o rápido crescimento, movido pelo boca a boca das clientes.
+
+          Com o tempo, o espaço ficou pequeno. A loja evoluiu, transformando uma casa inteira em um verdadeiro ateliê de locação. Hoje, a Cláudia Andrade oferece uma experiência completa em um ambiente charmoso e acolhedor, da escolha do modelo aos ajustes finais.
+
+          Mais do que uma loja, é um símbolo de evolução, dedicação e amor à moda, mantendo viva a essência do sonho que começou em 2007.
         </p>
       </div>
     </section>
