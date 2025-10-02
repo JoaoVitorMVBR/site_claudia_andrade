@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Shirt } from 'lucide-react';
+import { Menu, X, Shirt, Package, LayoutDashboard, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 
 // Tipagem para os itens de navegação
@@ -15,7 +15,7 @@ interface NavItem {
 // Dados de navegação (exemplo, substitua pelos seus dados reais)
 const navItems: NavItem[] = [
   { name: 'Produtos', href: 'produtos', icon: Shirt },
-  { name: 'Dashboard', href: 'dashboard', icon: Menu },
+  // { name: 'Dashboard', href: 'dashboard', icon: LayoutDashboard },
   // Adicione outros itens conforme necessário
 ];
 
@@ -40,10 +40,10 @@ const Sidebar: React.FC = () => {
   const isActive = (href: string) => {
     const fullHref = `/adm/${href}`;
     // Handle caso pathname seja null ou undefined
-    if (!pathname) {
+    if (href === 'produtos' && pathname === '/adm/produtos/add') {
       return false;
     }
-    return pathname === fullHref || (pathname.startsWith(fullHref) && href !== '');
+    return pathname === fullHref || (pathname.startsWith(fullHref + '/') && href !== '');
   };
 
   return (
@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
       {/* Sidebar Principal */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col justify-between z-30
+          fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col justify-between z-30 font-[Poppins-light]
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0 md:block
@@ -81,7 +81,7 @@ const Sidebar: React.FC = () => {
           {/* Logo/Title */}
           <div className="flex items-center p-4 h-16 border-b border-gray-200 font-[Poppins-light]">
             <span className="text-xl font-bold text-gray-800 flex items-center">
-              <span className="w-6 h-6 bg-blue-500 rounded-full mr-2"></span>
+              <span className="w-6 h-6 bg-[#641311] rounded-full mr-2"></span>
               Gestão de Inventário
             </span>
           </div>
@@ -97,9 +97,9 @@ const Sidebar: React.FC = () => {
                   key={item.name}
                   href={href}
                   onClick={handleNavigationClick}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors 
                     ${isCurrent
-                      ? 'bg-blue-500 text-white shadow-md'
+                      ? 'bg-[#641311] text-white shadow-md'
                       : 'text-gray-600 hover:bg-gray-100'
                     }`}
                 >
@@ -119,7 +119,7 @@ const Sidebar: React.FC = () => {
                   : 'text-gray-600 hover:bg-green-100 hover:text-green-700'
                 }`}
             >
-              <Shirt className="mr-3 h-5 w-5" />
+              <Plus className="mr-3 h-5 w-5" />
               Adicionar Nova Peça
             </Link>
           </nav>
