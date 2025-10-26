@@ -8,8 +8,10 @@ interface NewProduct {
   type: string;
   color: string;
   size: string;
-  imageFile: File | null;
-  imageUrl: string | null; // Para pré-visualização da imagem
+  frontImageFile: File | null; // Imagem da frente
+  frontImageUrl: string | null; // URL para pré-visualização da frente
+  backImageFile: File | null; // Imagem do verso
+  backImageUrl: string | null; // URL para pré-visualização do verso
 }
 
 // 2. Opções de exemplo para os dropdowns
@@ -22,12 +24,14 @@ const AddNewClothing: React.FC = () => {
     type: '',
     color: '',
     size: '',
-    imageFile: null,
-    imageUrl: null,
+    frontImageFile: null,
+    frontImageUrl: null,
+    backImageFile: null,
+    backImageUrl: null,
   });
 
-  // Estado para a mensagem de erro/sucesso (opcional)
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  // Estado para a mensagem de erro/sucesso
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // 3. Função para manipular a submissão do formulário
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,20 +43,35 @@ const AddNewClothing: React.FC = () => {
       return;
     }
 
+    // Verifica se pelo menos uma imagem foi enviada (opcional, dependendo do requisito)
+    if (!product.frontImageFile && !product.backImageFile) {
+      setStatusMessage({ type: 'error', message: 'Por favor, envie pelo menos uma imagem (frente ou verso).' });
+      return;
+    }
+
     // Lógica de envio de dados (API) aqui
     console.log('Dados do produto a serem enviados:', product);
-    
-    // Simulação de sucesso
     setStatusMessage({ type: 'success', message: 'Item adicionado com sucesso!' });
-    
+
     // Resetar o formulário
-    setProduct({ name: '', type: '', color: '', size: '', imageFile: null, imageUrl: null });
+    setProduct({
+      name: '',
+      type: '',
+      color: '',
+      size: '',
+      frontImageFile: null,
+      frontImageUrl: null,
+      backImageFile: null,
+      backImageUrl: null,
+    });
   };
 
-  // 4. Função para manipular o upload de imagem
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
+  // 4. Funções para manipular o upload de imagens
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
+    imageType: 'front' | 'back'
+  ) => {
     let file: File | undefined;
-
     if ('dataTransfer' in e) {
       file = e.dataTransfer.files[0];
       e.preventDefault(); // Necessário para drag and drop
@@ -62,164 +81,214 @@ const AddNewClothing: React.FC = () => {
 
     if (file && file.size <= 10 * 1024 * 1024) { // Limite de 10MB
       const url = URL.createObjectURL(file);
-      setProduct(prev => ({
+      setProduct((prev) => ({
         ...prev,
-        imageFile: file,
-        imageUrl: url,
+        ...(imageType === 'front'
+          ? { frontImageFile: file, frontImageUrl: url }
+          : { backImageFile: file, backImageUrl: url }),
       }));
     } else if (file) {
-        setStatusMessage({ type: 'error', message: 'O arquivo é muito grande (máx. 10MB).' });
+      setStatusMessage({ type: 'error', message: 'O arquivo é muito grande (máx. 10MB).' });
     }
   };
 
-  const removeImage = () => {
-    if (product.imageUrl) {
-      URL.revokeObjectURL(product.imageUrl); // Libera a URL de objeto
-    }
-    setProduct(prev => ({ ...prev, imageFile: null, imageUrl: null }));
+  const handleFrontImageUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
+    handleImageUpload(e, 'front');
+  };
+
+  const handleBackImageUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
+    handleImageUpload(e, 'back');
+  };
+
+  const removeImage = (imageType: 'front' | 'back') => {
+    setProduct((prev) => {
+      if (imageType === 'front' && prev.frontImageUrl) {
+        URL.revokeObjectURL(prev.frontImageUrl); // Libera a URL da imagem da frente
+        return { ...prev, frontImageFile: null, frontImageUrl: null };
+      } else if (imageType === 'back' && prev.backImageUrl) {
+        URL.revokeObjectURL(prev.backImageUrl); // Libera a URL da imagem do verso
+        return { ...prev, backImageFile: null, backImageUrl: null };
+      }
+      return prev;
+    });
   };
 
   return (
-    // O p-4 e md:p-8 dão um padding responsivo para o conteúdo
-    <div className="flex-1 p-4 md:p-8 min-h-screen bg-gray-50"> 
-      
+    <div className="flex-1 p-4 md:p-8 min-h-screen bg-gray-50">
       {/* Título Principal */}
       <h1 className="text-2xl md:text-3xl font-[Poppins-light] text-gray-800 mb-8">
         Adicionar Novo Item de Vestuário
       </h1>
-
       {/* Mensagem de Status */}
       {statusMessage && (
-        <div 
-          className={`p-3 mb-6 rounded-md ${statusMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+        <div
+          className={`p-3 mb-6 rounded-md ${
+            statusMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}
         >
           {statusMessage.message}
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
-        
-        {/* CAMPOS DE INPUT (Responsividade: 2 colunas no desktop, 1 no mobile) */}
+        {/* CAMPOS DE INPUT */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-          
           {/* Campo Nome */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Nome</label>
             <input
               type="text"
-              placeholder="e.g., Classic T-Shirt"
+              placeholder="ex.: Camiseta Clássica"
               value={product.name}
               onChange={(e) => setProduct({ ...product, name: e.target.value })}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
               required
             />
           </div>
-
           {/* Campo Tipo (Dropdown) */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Type</label>
-            <select
-              value={product.type}
-              onChange={(e) => setProduct({ ...product, type: e.target.value })}
-              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
-              required
-            >
-              <option value="">Select item type</option>
-              {typeOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Campo Cor */}
-          <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Color</label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
             <input
               type="text"
-              placeholder="e.g., Navy Blue"
+              placeholder="ex.: Meio corpo bordado"
+              value={product.name}
+              onChange={(e) => setProduct({ ...product, name: e.target.value })}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+              required
+            />              
+          </div>
+          {/* Campo Cor */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
+            <input
+              type="text"
+              placeholder="ex.: Azul Marinho"
               value={product.color}
               onChange={(e) => setProduct({ ...product, color: e.target.value })}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
               required
             />
           </div>
-
           {/* Campo Tamanho (Dropdown) */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Size</label>
-            <select
-              value={product.size}
-              onChange={(e) => setProduct({ ...product, size: e.target.value })}
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tamanho</label>
+            <input
+              type="text"
+              placeholder="ex.: 42"
+              value={product.name}
+              onChange={(e) => setProduct({ ...product, name: e.target.value })}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
               required
+            />
+          </div>
+        </div>
+        {/* CAMPOS DE UPLOAD DE IMAGEM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
+          {/* Upload Imagem da Frente */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem da Frente</label>
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleFrontImageUpload}
+              className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
+                product.frontImageUrl ? 'border-gray-200' : 'border-gray-300 hover:border-blue-400 cursor-pointer'
+              } font-[Poppins-light]`}
             >
-              <option value="">Select item size</option>
-              {sizeOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        
-        {/* CAMPO DE UPLOAD DE IMAGEM */}
-        <div className="mb-10">
-          <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Image</label>
-
-          {/* Área de Dropzone/Preview */}
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleImageUpload}
-            className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${product.imageUrl ? 'border-gray-200' : 'border-gray-300 hover:border-blue-400 cursor-pointer'} font-[Poppins-light]`}
-          >
-            {product.imageUrl ? (
-              // Preview da Imagem
-              <div className="relative w-full h-64 mx-auto">
-                <Image 
-                    src={product.imageUrl} 
-                    alt="Preview" 
-                    layout="fill" 
+              {product.frontImageUrl ? (
+                // Preview da Imagem da Frente
+                <div className="relative w-full h-64 mx-auto">
+                  <Image
+                    src={product.frontImageUrl}
+                    alt="Preview Frente"
+                    layout="fill"
                     objectFit="contain"
-                    className="rounded-lg" 
-                />
-                <button 
-                    type="button" 
-                    onClick={removeImage} 
+                    className="rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage('front')}
                     className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                    aria-label="Remove image"
-                >
+                    aria-label="Remover imagem da frente"
+                  >
                     <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              // Dropzone Vazio
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">
-                  <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">
-                    Upload a file
-                  </span>{' '}
-                  or drag and drop
-                </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, up to 10MB</p>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept="image/png, image/jpeg, image/gif"
-                  className="sr-only"
-                  onChange={handleImageUpload}
-                />
-              </label>
-            )}
+                  </button>
+                </div>
+              ) : (
+                // Dropzone Vazio (Frente)
+                <label htmlFor="front-file-upload" className="cursor-pointer">
+                  <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload a file</span> or
+                    drag and drop
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, até 10MB</p>
+                  <input
+                    id="front-file-upload"
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    className="sr-only"
+                    onChange={handleFrontImageUpload}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+          {/* Upload Imagem do Verso */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem do Verso</label>
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleBackImageUpload}
+              className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
+                product.backImageUrl ? 'border-gray-200' : 'border-gray-300 hover:border-blue-400 cursor-pointer'
+              } font-[Poppins-light]`}
+            >
+              {product.backImageUrl ? (
+                // Preview da Imagem do Verso
+                <div className="relative w-full h-64 mx-auto">
+                  <Image
+                    src={product.backImageUrl}
+                    alt="Preview Verso"
+                    layout="fill"
+                    objectFit="contain"
+                    className="rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage('back')}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                    aria-label="Remover imagem do verso"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                // Dropzone Vazio (Verso)
+                <label htmlFor="back-file-upload" className="cursor-pointer">
+                  <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload a file</span> or
+                    drag and drop
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, até 10MB</p>
+                  <input
+                    id="back-file-upload"
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    className="sr-only"
+                    onChange={handleBackImageUpload}
+                  />
+                </label>
+              )}
+            </div>
           </div>
         </div>
-        
         {/* BOTÃO DE AÇÃO */}
         <div className="flex justify-end">
           <button
             type="submit"
             className="px-6 py-3 bg-[#641311] text-white font-[Poppins-light] rounded-lg shadow-md hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Save Item
+            Salvar Item
           </button>
         </div>
       </form>

@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import Highlights from '@/components/Highlights';
 import WhyRent from '@/components/WhyRent';
 import SocialProof from '@/components/SocialProof';
+import WppBtn from '@/components/Wpp'
 
 export default function HomePage() {
   return (
@@ -22,6 +23,13 @@ export default function HomePage() {
         <WhyRent />
         <SocialProof />
         <FAQSection />
+        <WppBtn 
+            phone="5511999998888" 
+            message="Olá gostaria de mais informações!" 
+            position="bottom-right" 
+            size={64} 
+            theme="default"     
+        />
       </main>
 
       {/* Rodapé */}
