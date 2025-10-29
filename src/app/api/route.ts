@@ -1,41 +1,90 @@
-// app/api/products/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/firebase'
+// app/api/clothing/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  startAfter, 
+  limit, 
+  getDocs, 
+  where 
+} from 'firebase/firestore';
+import { Product } from '@/types/products';
 
-const PAGE_SIZE = 6
+const PAGE_SIZE = 12;
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const cursor = searchParams.get('cursor')
-    ? parseInt(searchParams.get('cursor')!)
-    : undefined
-
   try {
-    const products = await db.product.findMany({
-      where: { published: true },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        image: true,
-        slug: true,
-      },
-      orderBy: { id: 'desc' },
-      take: PAGE_SIZE + 1, // +1 para verificar se há mais
-      ...(cursor && { skip: 1, cursor: { id: cursor } }),
-    })
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get('cursor');
+    const type = searchParams.get('type') || '';
+    const color = searchParams.get('color') || '';
+    const size = searchParams.get('size') || '';
 
-    const hasMore = products.length > PAGE_SIZE
-    const items = hasMore ? products.slice(0, -1) : products
-    const nextCursor = hasMore ? products[products.length - 1].id : null
+    // Base query
+    let q = query(
+      collection(db, 'clothing'),
+      orderBy('createdAt', 'desc'),
+      limit(PAGE_SIZE + 1)
+    );
 
-    const formatted = items.map(p => ({
-      ...p,
-      price: `R$ ${parseFloat(p.price).toFixed(2).replace('.', ',')}`,
-    }))
+    // Filtros
+    if (type || color || size) {
+      const filters: any[] = [];
+      if (type) filters.push(where('type', '==', type));
+      if (color) filters.push(where('color', '==', color));
+      if (size) filters.push(where('size', '==', size));
 
-    return NextResponse.json({ items: formatted, nextCursor })
-  } catch (error) {
-    return NextResponse.json({ error: 'Erro ao buscar produtos' }, { status: 500 })
+      q = query(
+        collection(db, 'clothing'),
+        ...filters,
+        orderBy('createdAt', 'desc'),
+        limit(PAGE_SIZE + 1)
+      );
+    }
+
+    // Cursor (paginação)
+    if (cursor) {
+      const cursorQuery = query(
+        collection(db, 'clothing'),
+        where('__name__', '==', cursor),
+        limit(1)
+      );
+      const cursorSnap = await getDocs(cursorQuery);
+      if (!cursorSnap.empty) {
+        q = query(q, startAfter(cursorSnap.docs[0]));
+      }
+    }
+
+    const snapshot = await getDocs(q);
+    const docs = snapshot.docs;
+
+    const hasMore = docs.length > PAGE_SIZE;
+    const items = hasMore ? docs.slice(0, -1) : docs;
+    const nextCursor = hasMore ? docs[docs.length - 1].id : null;
+
+    const data: Product[] = items.map(doc => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        name: d.name || '',
+        type: d.type || '',
+        color: d.color || '',
+        size: d.size || '',
+        frontImageUrl: d.frontImageUrl || '',
+        backImageUrl: d.backImageUrl || '',
+        destaque: d.destaque || false,
+        createdAt: d.createdAt?.toDate?.()?.toISOString() || '',
+      };
+    });
+
+    return NextResponse.json({ items: data, nextCursor });
+  } catch (error: any) {
+    console.error('API Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
