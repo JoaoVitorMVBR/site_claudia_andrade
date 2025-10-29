@@ -9,6 +9,7 @@ export type ProductData = {
   size: string;
   frontImageUrl: string;
   backImageUrl: string;
+  destaque?: boolean;
 };
 
 export const addProduct = async (data: ProductData) => {

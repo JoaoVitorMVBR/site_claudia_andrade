@@ -17,6 +17,7 @@ interface NewProduct {
   frontImageUrl: string | null;
   backImageFile: File | null;
   backImageUrl: string | null;
+  destaque: boolean | null,
 }
 
 const AddNewClothing: React.FC = () => {
@@ -29,6 +30,7 @@ const AddNewClothing: React.FC = () => {
     frontImageUrl: null,
     backImageFile: null,
     backImageUrl: null,
+    destaque: false,
   });
 
   const [statusMessage, setStatusMessage] = useState<{
@@ -68,6 +70,7 @@ const AddNewClothing: React.FC = () => {
         size: product.size,
         frontImageUrl: frontUrl,
         backImageUrl: backUrl,
+        destaque: false,
       });
 
       // 4. Atualiza o documento com o próprio ID
@@ -81,7 +84,7 @@ const AddNewClothing: React.FC = () => {
       setProduct({
         name: "", type: "", color: "", size: "",
         frontImageFile: null, frontImageUrl: null,
-        backImageFile: null, backImageUrl: null,
+        backImageFile: null, backImageUrl: null, destaque: false,
       });
     } catch (err: any) {
       console.error("Erro ao salvar:", err);
