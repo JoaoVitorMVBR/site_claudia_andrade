@@ -14,10 +14,6 @@ interface NewProduct {
   backImageUrl: string | null; // URL para pré-visualização do verso
 }
 
-// 2. Opções de exemplo para os dropdowns
-const typeOptions = ['T-Shirt', 'Jeans', 'Dress', 'Jacket', 'Shorts', 'Skirt'];
-const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '30', '32', '34'];
-
 const AddNewClothing: React.FC = () => {
   const [product, setProduct] = useState<NewProduct>({
     name: '',
@@ -37,23 +33,16 @@ const AddNewClothing: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage(null); // Limpa mensagens anteriores
-
     if (!product.name || !product.type || !product.color || !product.size) {
       setStatusMessage({ type: 'error', message: 'Por favor, preencha todos os campos obrigatórios.' });
       return;
     }
-
-    // Verifica se pelo menos uma imagem foi enviada (opcional, dependendo do requisito)
     if (!product.frontImageFile && !product.backImageFile) {
       setStatusMessage({ type: 'error', message: 'Por favor, envie pelo menos uma imagem (frente ou verso).' });
       return;
     }
-
-    // Lógica de envio de dados (API) aqui
     console.log('Dados do produto a serem enviados:', product);
     setStatusMessage({ type: 'success', message: 'Item adicionado com sucesso!' });
-
-    // Resetar o formulário
     setProduct({
       name: '',
       type: '',
@@ -74,12 +63,11 @@ const AddNewClothing: React.FC = () => {
     let file: File | undefined;
     if ('dataTransfer' in e) {
       file = e.dataTransfer.files[0];
-      e.preventDefault(); // Necessário para drag and drop
+      e.preventDefault();
     } else {
       file = e.target.files?.[0];
     }
-
-    if (file && file.size <= 10 * 1024 * 1024) { // Limite de 10MB
+    if (file && file.size <= 10 * 1024 * 1024) {
       const url = URL.createObjectURL(file);
       setProduct((prev) => ({
         ...prev,
@@ -103,10 +91,10 @@ const AddNewClothing: React.FC = () => {
   const removeImage = (imageType: 'front' | 'back') => {
     setProduct((prev) => {
       if (imageType === 'front' && prev.frontImageUrl) {
-        URL.revokeObjectURL(prev.frontImageUrl); // Libera a URL da imagem da frente
+        URL.revokeObjectURL(prev.frontImageUrl);
         return { ...prev, frontImageFile: null, frontImageUrl: null };
       } else if (imageType === 'back' && prev.backImageUrl) {
-        URL.revokeObjectURL(prev.backImageUrl); // Libera a URL da imagem do verso
+        URL.revokeObjectURL(prev.backImageUrl);
         return { ...prev, backImageFile: null, backImageUrl: null };
       }
       return prev;
@@ -119,6 +107,7 @@ const AddNewClothing: React.FC = () => {
       <h1 className="text-2xl md:text-3xl font-[Poppins-light] text-gray-800 mb-8">
         Adicionar Novo Item de Vestuário
       </h1>
+
       {/* Mensagem de Status */}
       {statusMessage && (
         <div
@@ -129,10 +118,11 @@ const AddNewClothing: React.FC = () => {
           {statusMessage.message}
         </div>
       )}
+
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
         {/* CAMPOS DE INPUT */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-          {/* Campo Nome */}
+          {/* Nome */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Nome</label>
             <input
@@ -144,19 +134,21 @@ const AddNewClothing: React.FC = () => {
               required
             />
           </div>
-          {/* Campo Tipo (Dropdown) */}
+
+          {/* Tipo (agora input de texto) */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
             <input
               type="text"
               placeholder="ex.: Meio corpo bordado"
-              value={product.name}
-              onChange={(e) => setProduct({ ...product, name: e.target.value })}
+              value={product.type}
+              onChange={(e) => setProduct({ ...product, type: e.target.value })}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
               required
-            />              
+            />
           </div>
-          {/* Campo Cor */}
+
+          {/* Cor */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
             <input
@@ -168,20 +160,22 @@ const AddNewClothing: React.FC = () => {
               required
             />
           </div>
-          {/* Campo Tamanho (Dropdown) */}
+
+          {/* Tamanho (agora input de texto) */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tamanho</label>
             <input
               type="text"
               placeholder="ex.: 42"
-              value={product.name}
-              onChange={(e) => setProduct({ ...product, name: e.target.value })}
+              value={product.size}
+              onChange={(e) => setProduct({ ...product, size: e.target.value })}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
               required
             />
           </div>
         </div>
-        {/* CAMPOS DE UPLOAD DE IMAGEM */}
+
+        {/* CAMPOS DE UPLOAD DE IMAGEM (JÁ SEPARADOS: FRENTE E VERSO) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
           {/* Upload Imagem da Frente */}
           <div>
@@ -194,7 +188,6 @@ const AddNewClothing: React.FC = () => {
               } font-[Poppins-light]`}
             >
               {product.frontImageUrl ? (
-                // Preview da Imagem da Frente
                 <div className="relative w-full h-64 mx-auto">
                   <Image
                     src={product.frontImageUrl}
@@ -213,7 +206,6 @@ const AddNewClothing: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                // Dropzone Vazio (Frente)
                 <label htmlFor="front-file-upload" className="cursor-pointer">
                   <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">
@@ -232,6 +224,7 @@ const AddNewClothing: React.FC = () => {
               )}
             </div>
           </div>
+
           {/* Upload Imagem do Verso */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem do Verso</label>
@@ -243,7 +236,6 @@ const AddNewClothing: React.FC = () => {
               } font-[Poppins-light]`}
             >
               {product.backImageUrl ? (
-                // Preview da Imagem do Verso
                 <div className="relative w-full h-64 mx-auto">
                   <Image
                     src={product.backImageUrl}
@@ -262,7 +254,6 @@ const AddNewClothing: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                // Dropzone Vazio (Verso)
                 <label htmlFor="back-file-upload" className="cursor-pointer">
                   <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">
@@ -282,6 +273,7 @@ const AddNewClothing: React.FC = () => {
             </div>
           </div>
         </div>
+
         {/* BOTÃO DE AÇÃO */}
         <div className="flex justify-end">
           <button
