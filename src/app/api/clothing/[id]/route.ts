@@ -6,8 +6,9 @@ import { ref, deleteObject } from 'firebase/storage';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   const { id } = params;
 
   console.log('API DELETE iniciada para ID:', id); // ← LOG INICIAL
