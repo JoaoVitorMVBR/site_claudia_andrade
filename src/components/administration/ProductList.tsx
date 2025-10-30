@@ -28,7 +28,7 @@ const ProductList: React.FC = () => {
     if (filters.size) params.append('size', filters.size);
 
     try {
-      const res = await fetch(`/api/?${params}`);
+      const res = await fetch(`/api/clothing/get/?${params}`);
       if (!res.ok) throw new Error('Falha na requisição');
 
       const data = await res.json();
