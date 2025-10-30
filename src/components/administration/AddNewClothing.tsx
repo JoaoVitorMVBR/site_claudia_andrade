@@ -1,12 +1,7 @@
 'use client';
-
 import React, { useState } from "react";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { uploadImage } from "@/utils/uploadImage";
-import { addProduct } from "@/utils/addProduct";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface NewProduct {
   name: string;
@@ -17,7 +12,6 @@ interface NewProduct {
   frontImageUrl: string | null;
   backImageFile: File | null;
   backImageUrl: string | null;
-  destaque: boolean | null,
 }
 
 const AddNewClothing: React.FC = () => {
@@ -30,13 +24,13 @@ const AddNewClothing: React.FC = () => {
     frontImageUrl: null,
     backImageFile: null,
     backImageUrl: null,
-    destaque: false,
   });
 
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,30 +47,25 @@ const AddNewClothing: React.FC = () => {
         throw new Error("Envie ambas as imagens (frente e verso).");
       }
 
-      // 1. Gera ID temporário para nomear as imagens
-      const tempId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Enviar para a API
+      const formData = new FormData();
+      formData.append("name", product.name);
+      formData.append("type", product.type);
+      formData.append("color", product.color);
+      formData.append("size", product.size);
+      formData.append("frontImage", product.frontImageFile);
+      formData.append("backImage", product.backImageFile);
 
-      // 2. Upload das duas imagens com o mesmo ID
-      const [frontUrl, backUrl] = await Promise.all([
-        uploadImage(product.frontImageFile, `${tempId}_front`),
-        uploadImage(product.backImageFile, `${tempId}_back`),
-      ]);
-
-      // 3. Salva no Firestore → gera ID real
-      const firestoreId = await addProduct({
-        name: product.name,
-        type: product.type,
-        color: product.color,
-        size: product.size,
-        frontImageUrl: frontUrl,
-        backImageUrl: backUrl,
-        destaque: false,
+      const res = await fetch("/api/clothing/create", {
+        method: "POST",
+        body: formData,
       });
 
-      // 4. Atualiza o documento com o próprio ID
-      await updateDoc(doc(db, "clothing", firestoreId), {
-        id: firestoreId,
-      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao salvar no servidor.");
+      }
 
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
 
@@ -84,7 +73,7 @@ const AddNewClothing: React.FC = () => {
       setProduct({
         name: "", type: "", color: "", size: "",
         frontImageFile: null, frontImageUrl: null,
-        backImageFile: null, backImageUrl: null, destaque: false,
+        backImageFile: null, backImageUrl: null,
       });
     } catch (err: any) {
       console.error("Erro ao salvar:", err);
@@ -267,7 +256,7 @@ const AddNewClothing: React.FC = () => {
             type="submit"
             disabled={loading}
             className={`px-6 py-3 bg-[#641311] text-white font-[Poppins-light] rounded-lg shadow-md transition ${
-              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#54100e]"
             }`}
           >
             {loading ? "Salvando…" : "Salvar Vestido"}

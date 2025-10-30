@@ -29,17 +29,23 @@ const ProductList: React.FC = () => {
 
     try {
       const res = await fetch(`/api/?${params}`);
-      const { items, nextCursor } = await res.json();
+      if (!res.ok) throw new Error('Falha na requisição');
+
+      const data = await res.json();
+
+      // GARANTE QUE items SEMPRE SEJA UM ARRAY
+      const items: Product[] = Array.isArray(data.items) ? data.items : [];
 
       if (append) {
         setProducts(prev => [...prev, ...items]);
       } else {
         setProducts(items);
       }
-      setNextCursor(nextCursor);
-      setHasMore(!!nextCursor);
+      setNextCursor(data.nextCursor || null);
+      setHasMore(!!data.nextCursor);
     } catch (error) {
       console.error(error);
+      setProducts([]); // ← sempre array em caso de erro
       alert('Erro ao carregar vestidos.');
     } finally {
       setLoading(false);
@@ -83,31 +89,31 @@ const ProductList: React.FC = () => {
     }
   };
 
-const handleRemove = async (productId: string) => {
-  if (!confirm('Tem certeza?')) return;
+  const handleRemove = async (productId: string) => {
+    if (!confirm('Tem certeza?')) return;
 
-  console.log('Chamando DELETE para ID:', productId); // ← LOG AQUI
+    console.log('Chamando DELETE para ID:', productId);
 
-  try {
-    const res = await fetch(`/api/clothing/${productId}`, {
-      method: 'DELETE',
-    });
+    try {
+      const res = await fetch(`/api/clothing/${productId}`, {
+        method: 'DELETE',
+      });
 
-    console.log('Resposta da API:', res.status, res.ok); // ← LOG AQUI
+      console.log('Resposta da API:', res.status, res.ok);
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error('Erro da API:', text);
-      throw new Error('Falha ao deletar');
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Erro da API:', text);
+        throw new Error('Falha ao deletar');
+      }
+
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      alert('Removido com sucesso!');
+    } catch (err: any) {
+      console.error('Erro no fetch:', err);
+      alert('Erro ao remover');
     }
-
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    alert('Removido com sucesso!');
-  } catch (err: any) {
-    console.error('Erro no fetch:', err);
-    alert('Erro ao remover');
-  }
-};
+  };
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -133,7 +139,7 @@ const handleRemove = async (productId: string) => {
 
   return (
     <div className="flex-1 p-4 md:p-8">
-      {/* Header e Filtros (mantidos iguais) */}
+      {/* Header e Filtros */}
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-[Poppins-light]">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           Listar/Gerenciar Vestidos
@@ -172,7 +178,7 @@ const handleRemove = async (productId: string) => {
         )}
       </div>
 
-      {/* Tabela e Cards (mantidos) */}
+      {/* Tabela e Cards */}
       <div className="md:overflow-x-auto bg-white rounded-lg shadow-md">
         {/* Tabela Desktop */}
         <table className="hidden md:table min-w-full divide-y divide-gray-200">
@@ -188,7 +194,8 @@ const handleRemove = async (productId: string) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredProducts.map((product) => (
+            {/* PROTEÇÃO: só faz map se for array */}
+            {Array.isArray(filteredProducts) && filteredProducts.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-[Poppins-light]">
                   <div className="relative h-10 w-10">
@@ -227,7 +234,8 @@ const handleRemove = async (productId: string) => {
 
         {/* Mobile Cards */}
         <div className="md:hidden divide-y divide-gray-200">
-          {filteredProducts.map((product) => (
+          {/* MESMA PROTEÇÃO NO MOBILE */}
+          {Array.isArray(filteredProducts) && filteredProducts.map((product) => (
             <div key={product.id} className="p-4 flex items-start gap-4">
               <div className="relative h-16 w-16 flex-shrink-0">
                 <Image
@@ -258,7 +266,7 @@ const handleRemove = async (productId: string) => {
                 </div>
               </div>
               <div>
-                <button onClick={() => { console.log('Deletando ID:', product.id); handleRemove(product.id)}} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
+                <button onClick={() => handleRemove(product.id)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -286,7 +294,8 @@ const handleRemove = async (productId: string) => {
         </div>
       )}
 
-      {products.length === 0 && !loading && (
+      {/* Mensagem de vazio ou erro */}
+      {(!Array.isArray(filteredProducts) || filteredProducts.length === 0) && !loading && (
         <p className="mt-8 text-center text-gray-500">Nenhum vestido encontrado.</p>
       )}
     </div>
