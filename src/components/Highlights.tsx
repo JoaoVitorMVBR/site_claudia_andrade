@@ -1,33 +1,73 @@
-// components/Highlights.tsx
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
+
+interface Dress {
+  id: string;
+  name: string;
+  price?: string; // opcional (pode vir do banco ou fixo)
+  frontImageUrl: string;
+  slug: string;
+  destaque: boolean;
+}
 
 const Highlights: React.FC = () => {
-  const dresses = [
-    {
-      id: 1,
-      name: 'Vestido Estrela',
-      price: 'R$ 399,90',
-      image: '/images/vestido1.jpg',
-      slug: 'vestido-estrela',
-    },
-    {
-      id: 2,
-      name: 'Vestido Lua',
-      price: 'R$ 499,90',
-      image: '/images/vestido2.jpg',
-      slug: 'vestido-lua',
-    },
-    {
-      id: 3,
-      name: 'Vestido Sol',
-      price: 'R$ 349,90',
-      image: '/images/vestido3.jpg',
-      slug: 'vestido-sol',
-    },
-  ];
+  const [dresses, setDresses] = useState<Dress[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Busca apenas os 3 vestidos com destaque = true
+    const q = query(
+      collection(db, 'clothing'),
+      where('destaque', '==', true),
+      limit(3)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => {
+        const firestoreData = doc.data();
+        return {
+          id: doc.id,
+          name: firestoreData.name,
+          price: firestoreData.price || 'Sob Consulta', // fallback
+          frontImageUrl: firestoreData.frontImageUrl,
+          slug: firestoreData.slug || doc.id, // usa slug ou ID
+          destaque: firestoreData.destaque,
+        } as Dress;
+      });
+      setDresses(data);
+      setLoading(false);
+    }, (error) => {
+      console.error('Erro ao carregar destaques:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-12 bg-[#FFFFFF]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-500">Carregando destaques...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (dresses.length === 0) {
+    return (
+      <section className="py-12 bg-[#FFFFFF]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-600">Nenhum vestido em destaque no momento.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12 bg-[#FFFFFF]">
@@ -44,11 +84,12 @@ const Highlights: React.FC = () => {
             >
               <div className="relative w-full aspect-[3/4]">
                 <Image
-                  src={dress.image}
+                  src={dress.frontImageUrl}
                   alt={dress.name}
                   fill
                   className="object-contain object-center"
                   quality={75}
+                  unoptimized // ← necessário para URLs do Firebase
                 />
               </div>
               <div className="p-4 text-center">

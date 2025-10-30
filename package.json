@@ -2,6 +2,7 @@
   "name": "site_claudia_andrade",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,12 +13,13 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.0.17",
+    "firebase": "^12.4.0",
     "lucide-react": "^0.544.0",
-    "next": "^15.3.1",
+    "next": "^16.0.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
     "tailwindcss": "^4.0.17"
   },
@@ -32,7 +34,7 @@
     "@storybook/nextjs": "^8.6.11",
     "@storybook/react": "^8.6.11",
     "@storybook/test": "^8.6.11",
-    "@types/node": "^22.14.1",
+    "@types/node": "^24.9.2",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19",
     "@vitest/browser": "^3.0.9",
@@ -42,7 +44,7 @@
     "eslint-plugin-storybook": "^0.12.0",
     "playwright": "^1.51.1",
     "storybook": "^8.6.11",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "vitest": "^3.0.9"
   },
   "eslintConfig": {

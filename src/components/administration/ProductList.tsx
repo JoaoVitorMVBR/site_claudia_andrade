@@ -1,76 +1,145 @@
-import React, { useState, useMemo } from 'react';
+'use client';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Edit, Trash2 } from 'lucide-react';
-import { products as initialProducts } from '../../data/products'; // Ajuste o caminho
-import { Product } from '../../types'; // Importa o tipo
-
-// Assumindo que você tem uma lista de opções de filtro nos seus dados:
-const filterOptions = {
-    types: Array.from(new Set(initialProducts.map(p => p.type))),
-    colors: Array.from(new Set(initialProducts.map(p => p.color))),
-    sizes: Array.from(new Set(initialProducts.map(p => p.size))),
-};
-
-// ----------------------------------------------------------------------
+import { Search, Trash2, Loader2 } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { Product } from '@/types/products';
 
 const ProductList: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    type: '',
-    color: '',
-    size: '',
-  });
+  const [filters, setFilters] = useState({ type: '', color: '', size: '' });
 
-  // Lógica de Filtragem e Busca (mantida)
-  const filteredProducts = useMemo(() => {
-    let currentProducts = initialProducts;
+  // Fetch com debounce
+  const fetchProducts = useCallback(async (cursor: string | null = null, append = false) => {
+    if (!append) setLoading(true);
+    else setLoadingMore(true);
 
-    if (searchTerm) {
-        currentProducts = currentProducts.filter(p =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.type.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    if (searchTerm) params.append('search', searchTerm);
+    if (filters.type) params.append('type', filters.type);
+    if (filters.color) params.append('color', filters.color);
+    if (filters.size) params.append('size', filters.size);
+
+    try {
+      const res = await fetch(`/api/?${params}`);
+      const { items, nextCursor } = await res.json();
+
+      if (append) {
+        setProducts(prev => [...prev, ...items]);
+      } else {
+        setProducts(items);
+      }
+      setNextCursor(nextCursor);
+      setHasMore(!!nextCursor);
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao carregar vestidos.');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-
-    return currentProducts.filter(product => {
-        if (filters.type && product.type !== filters.type) return false;
-        if (filters.color && product.color !== filters.color) return false;
-        if (filters.size && product.size !== filters.size) return false;
-        return true;
-    });
   }, [searchTerm, filters]);
 
+  // Carregar inicial
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-  // Funções CRUD e Filtro (mantidas)
-  const handleEdit = (product: Product) => alert(`Preparando para editar o produto: ${product.name}`);
-  
-  const handleRemove = (productId: number) => {
-    if (window.confirm('Tem certeza que deseja remover esta peça?')) {
-      setProducts(products.filter(p => p.id !== productId));
-      alert('Peça removida com sucesso!');
+  // Debounce na busca/filtro
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setProducts([]);
+      setNextCursor(null);
+      fetchProducts();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm, filters, fetchProducts]);
+
+  const loadMore = () => {
+    if (nextCursor && !loadingMore) {
+      fetchProducts(nextCursor, true);
     }
   };
 
-  const handleFilterChange = (key: keyof typeof filters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+  const toggleDestaque = async (productId: string, currentValue: boolean) => {
+    const highlightedCount = products.filter(p => p.destaque).length;
+    if (!currentValue && highlightedCount >= 3) {
+      alert('Máximo de 3 itens em destaque permitidos.');
+      return;
+    }
+    try {
+      await updateDoc(doc(db, 'clothing', productId), { destaque: !currentValue });
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, destaque: !currentValue } : p));
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar destaque.');
+    }
   };
+
+const handleRemove = async (productId: string) => {
+  if (!confirm('Tem certeza?')) return;
+
+  console.log('Chamando DELETE para ID:', productId); // ← LOG AQUI
+
+  try {
+    const res = await fetch(`/api/clothing/${productId}`, {
+      method: 'DELETE',
+    });
+
+    console.log('Resposta da API:', res.status, res.ok); // ← LOG AQUI
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('Erro da API:', text);
+      throw new Error('Falha ao deletar');
+    }
+
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    alert('Removido com sucesso!');
+  } catch (err: any) {
+    console.error('Erro no fetch:', err);
+    alert('Erro ao remover');
+  }
+};
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filterOptions = useMemo(() => {
+    const types = Array.from(new Set(products.map(p => p.type))).sort();
+    const colors = Array.from(new Set(products.map(p => p.color))).sort();
+    const sizes = Array.from(new Set(products.map(p => p.size))).sort();
+    return { types, colors, sizes };
+  }, [products]);
+
+  const filteredProducts = products; // já filtrado no backend
+
+  if (loading && products.length === 0) {
+    return (
+      <div className="flex-1 p-8 text-center">
+        <Loader2 className="mx-auto animate-spin w-8 h-8 text-blue-600" />
+        <p className="text-gray-500 mt-2">Carregando vestidos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-4 md:p-8">
-      
-      {/* 1. Header and Search (Usando Flexbox para o alinhamento do título e futuros botões) */}
+      {/* Header e Filtros (mantidos iguais) */}
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-[Poppins-light]">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-          Listar/Gerenciar Peças
+          Listar/Gerenciar Vestidos
         </h1>
-        
-        {/* Campo de Busca Principal - Ocupa a largura total no mobile */}
         <div className="relative w-full md:w-1/3">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none font-[Poppins-light]">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search className="w-5 h-5 text-gray-400" />
           </div>
           <input
@@ -83,118 +152,71 @@ const ProductList: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. Filtros Responsivos (Usando Flexbox e wrap) */}
-      <div className="mb-6 flex flex-wrap gap-3"> 
-        
-          {/* Filtro por Tipo */}
-          <select
-              value={filters.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
-          >
-              <option value="">Todos os Tipos</option>
-              {filterOptions.types.map(option => (
-                  <option key={option} value={option}>{option}</option>
-              ))}
-          </select>
-
-          {/* Filtro por Cor */}
-          <select
-              value={filters.color}
-              onChange={(e) => handleFilterChange('color', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
-          >
-              <option value="">Todas as Cores</option>
-              {filterOptions.colors.map(option => (
-                  <option key={option} value={option}>{option}</option>
-              ))}
-          </select>
-
-          {/* Filtro por Tamanho */}
-          <select
-              value={filters.size}
-              onChange={(e) => handleFilterChange('size', e.target.value)}
-              className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]"
-          >
-              <option value="">Todos os Tamanhos</option>
-              {filterOptions.sizes.map(option => (
-                  <option key={option} value={option}>{option}</option>
-              ))}
-          </select>
-          
-          {/* Botão Limpar Filtros (Opcional, ocupando o resto do espaço ou quebrando a linha) */}
-          {(filters.type || filters.color || filters.size || searchTerm) && (
-              <button
-                  onClick={() => { setSearchTerm(''); setFilters({ type: '', color: '', size: '' }); }}
-                  className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-150 min-w-fit font-[Poppins-light]"
-              >
-                  Limpar
-              </button>
-          )}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
+          <option value="">Todos os Tipos</option>
+          {filterOptions.types.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select value={filters.color} onChange={(e) => handleFilterChange('color', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
+          <option value="">Todas as Cores</option>
+          {filterOptions.colors.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select value={filters.size} onChange={(e) => handleFilterChange('size', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
+          <option value="">Todos os Tamanhos</option>
+          {filterOptions.sizes.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        {(filters.type || filters.color || filters.size || searchTerm) && (
+          <button onClick={() => { setSearchTerm(''); setFilters({ type: '', color: '', size: '' }); }} className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-150 min-w-fit font-[Poppins-light]">
+            Limpar
+          </button>
+        )}
       </div>
 
-      {/* 3. Products List - Usando Grid para layout de cards em mobile, tabela em desktop */}
+      {/* Tabela e Cards (mantidos) */}
       <div className="md:overflow-x-auto bg-white rounded-lg shadow-md">
-        {/* Versão Tabela para telas maiores (md+) */}
+        {/* Tabela Desktop */}
         <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
-                IMAGE
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[150px]">
-                NOME
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
-                TIPO
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
-                COR
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">
-                TAM
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[100px]">
-                AÇÕES
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">IMAGEM</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[150px]">NOME</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">TIPO</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">COR</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">TAM</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">DESTAQUE</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[100px]">AÇÕES</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.map((product) => (
               <tr key={product.id}>
-                {/* Imagem */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-[Poppins-light]">
                   <div className="relative h-10 w-10">
                     <Image
-                      src={product.image}
+                      src={product.frontImageUrl}
                       alt={product.name}
-                      layout="fill"
-                      objectFit="cover"
-                      className="rounded-full"
+                      fill
+                      className="rounded-full object-cover"
+                      sizes="40px"
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyMjKC0fHB4oMjIyKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/2wBDAQoLCw4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4N/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAv/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/8QAFRABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A..."
                     />
                   </div>
                 </td>
-                
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-[Poppins-light] text-gray-900">
-                  {product.name}
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-[Poppins-light] text-gray-900">{product.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.type}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.color}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.size}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <input
+                    type="checkbox"
+                    checked={product.destaque || false}
+                    onChange={() => toggleDestaque(product.id, product.destaque || false)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                  />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
-                  {product.type}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
-                  {product.color}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">
-                  {product.size}
-                </td>
-                
-                {/* Botões de Ação */}
-                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                  <button 
-                    onClick={() => handleRemove(product.id)}
-                    className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
-                    title="Remover"
-                  >
+                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <button onClick={() => handleRemove(product.id)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
@@ -203,22 +225,21 @@ const ProductList: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Versão Cards para mobile (visível abaixo de md) */}
+        {/* Mobile Cards */}
         <div className="md:hidden divide-y divide-gray-200">
           {filteredProducts.map((product) => (
             <div key={product.id} className="p-4 flex items-start gap-4">
-              {/* Imagem */}
               <div className="relative h-16 w-16 flex-shrink-0">
                 <Image
-                  src={product.image}
+                  src={product.frontImageUrl}
                   alt={product.name}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-full"
+                  fill
+                  className="rounded-full object-cover"
+                  sizes="64px"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwkHBgoJCAkLCwoMDxkQDw4ODx4WFxIZJCAmJSMgIyMjKC0fHB4oMjIyKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/2wBDAQoLCw4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4NDx4N/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAv/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/8QAFRABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A..."
                 />
               </div>
-              
-              {/* Informações */}
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
                 <div className="text-xs text-gray-500 mt-1">
@@ -226,22 +247,18 @@ const ProductList: React.FC = () => {
                   <span>Cor: {product.color}</span> <br />
                   <span>Tamanho: {product.size}</span>
                 </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={product.destaque || false}
+                    onChange={() => toggleDestaque(product.id, product.destaque || false)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <label className="text-xs text-gray-600">Destaque</label>
+                </div>
               </div>
-              
-              {/* Ações */}
-              <div className="flex flex-col gap-2">
-                <button 
-                  onClick={() => handleEdit(product)}
-                  className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
-                  title="Editar"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => handleRemove(product.id)}
-                  className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
-                  title="Remover"
-                >
+              <div>
+                <button onClick={() => { console.log('Deletando ID:', product.id); handleRemove(product.id)}} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -250,10 +267,27 @@ const ProductList: React.FC = () => {
         </div>
       </div>
 
-      {filteredProducts.length === 0 && (
-          <p className="mt-8 text-center text-gray-500">
-             Nenhuma peça encontrada com os filtros/busca atuais.
-          </p>
+      {/* Botão Carregar Mais */}
+      {hasMore && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 mx-auto"
+          >
+            {loadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
+              </>
+            ) : (
+              'Carregar mais'
+            )}
+          </button>
+        </div>
+      )}
+
+      {products.length === 0 && !loading && (
+        <p className="mt-8 text-center text-gray-500">Nenhum vestido encontrado.</p>
       )}
     </div>
   );
