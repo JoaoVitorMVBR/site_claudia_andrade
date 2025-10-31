@@ -16,20 +16,24 @@ const FAQSection: React.FC = () => {
   // Lista de perguntas e respostas com tipagem
   const faqData: FAQItem[] = [
     {
-      question: "É necessário fazer agendamento?",
-      answer: "Sim, trabalhamos exclusivamente com agendamento prévio para garantir um atendimento personalizado. Você pode agendar através do nosso site ou pelo telefone."
+      question: "Quais os melhores dias para ir na loja?",
+      answer: "Terça , quarta e quinta."
     },
     {
-      question: "Quais são as políticas de ajuste?",
-      answer: "Oferecemos ajustes gratuitos em até 30 dias após a entrega, desde que o item não tenha sido usado. Ajustes adicionais podem ser cobrados separadamente."
+      question: "Vocês enviam para todo Brasil?",
+      answer: "Sim, enviamos para todo Brasil."
     },
     {
-      question: "Como funcionam as trocas?",
-      answer: "Aceitamos trocas em até 15 dias após a entrega, desde que o produto esteja em perfeito estado e com a embalagem original."
+      question: "Precisa agendar horário?",
+      answer: "Não precisa agendar horário, nosso atendimento é por ordem de chegada."
     },
     {
-      question: "Qual é a política de cancelamento?",
-      answer: "Cancelamentos podem ser feitos até 48 horas antes do horário agendado sem custo. Após esse período, pode ser cobrada uma taxa de 30%."
+      question: "Vocês ajustam os vestidos?",
+      answer: "Sim, fazemos os ajustes necessários."
+    },
+    {
+      question: "O frete é por conta da loja ou do cliente?",
+      answer: "O frete é por conta do cliente."
     }
   ];
 
