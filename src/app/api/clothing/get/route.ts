@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
     // Adiciona filtros se existirem
     if (type) queryClauses.unshift(where('type', '==', type)); // unshift para where vir ANTES de orderBy
     if (color) queryClauses.unshift(where('color', '==', color));
-    if (size) queryClauses.unshift(where('size', '==', size));
-
+    if (size) queryClauses.unshift(where('sizes', 'array-contains', size));
     // Base query com todas as cláusulas
     let q = query(collection(db, 'clothing'), ...queryClauses);
 
@@ -69,14 +68,13 @@ export async function GET(request: NextRequest) {
         name: d.name || '',
         type: d.type || '',
         color: d.color || '',
-        size: d.size || '',
+        sizes: d.size || '',
         frontImageUrl: d.frontImageUrl || '',
         backImageUrl: d.backImageUrl || '',
         destaque: d.destaque || false,
         createdAt: d.createdAt?.toDate?.()?.toISOString() || '',
       };
     });
-
     return NextResponse.json({ items: data, nextCursor });
   } catch (error: any) {
     console.error('API Error:', error);

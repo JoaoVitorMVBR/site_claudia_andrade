@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import Image from 'next/image';
 import { FaSearchPlus, FaTimes } from 'react-icons/fa';
@@ -20,6 +19,14 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
+  console.log('DRESS RECEBIDO NO FRONTEND:', {
+    id: dress.id,
+    name: dress.name,
+    sizes: dress.sizes,
+    typeOfSizes: typeof dress.sizes,
+    isArray: Array.isArray(dress.sizes),
+  });
+  
   return (
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,28 +86,28 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                 <strong>Cor:</strong> {dress.color}
               </p>
 
-              {/* Exibição dos tamanhos disponíveis */}
-              {dress.sizes && Array.isArray(dress.sizes) && dress.sizes.length > 0 ? (
-                <div>
-                  <p className="font-[Poppins-light] text-gray-700 mb-1">
-                    <strong>Tamanhos disponíveis:</strong>
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    {dress.sizes.map((size, index) => (
+              {/* ALTERAÇÃO: Exibe todos os tamanhos do banco */}
+              <div>
+                <p className="font-[Poppins-light] text-gray-700 mb-1">
+                  <strong>Tamanhos disponíveis:</strong>
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {Array.isArray(dress.sizes) && dress.sizes.length > 0 ? (
+                    dress.sizes.map((size, index) => (
                       <span
                         key={index}
                         className="inline-block bg-[#641311] text-white text-sm px-3 py-1 rounded-full font-[Poppins-light]"
                       >
                         {size}
                       </span>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm italic">
+                      Nenhum tamanho cadastrado
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <p className="font-[Poppins-light] text-gray-700">
-                  <strong>Tamanho:</strong> {dress.sizes || 'Único'}
-                </p>
-              )}
+              </div>
             </div>
 
             {dress.destaque && (

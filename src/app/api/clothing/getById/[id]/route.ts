@@ -6,11 +6,10 @@ import { Product } from '@/types/products';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // params é uma Promise!
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // AQUI: await params
-
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: 'ID do produto é obrigatório' },
@@ -35,10 +34,22 @@ export async function GET(
       name: data.name || '',
       type: data.type || '',
       color: data.color || '',
-      size: data.size || '',
+      sizes: (() => {
+        const raw = data.sizes ?? data.size;
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'string' && raw.trim()) {
+          try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [raw];
+          } catch {
+            return raw.split(',').map(s => s.trim()).filter(Boolean);
+          }
+        }
+        return [];
+      })(),
       frontImageUrl: data.frontImageUrl || '',
       backImageUrl: data.backImageUrl || '',
-      destaque: data.destaque || false,
+      destaque: data.destaque ?? false,
       createdAt: data.createdAt?.toDate?.()?.toISOString() || '',
     };
 
