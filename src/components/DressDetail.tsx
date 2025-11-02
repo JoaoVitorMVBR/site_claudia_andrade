@@ -17,7 +17,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
 
   // Função para abrir WhatsApp com mensagem personalizada
   const handleWhatsAppClick = () => {
-    const message = `Gostaria de fazer um orçamento do ${dress.name}`;
+    const message = `Olá, gostaria de fazer um orçamento do vestido ${dress.name}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
     

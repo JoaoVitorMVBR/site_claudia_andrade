@@ -22,38 +22,36 @@ export async function GET(request: NextRequest) {
     const color = searchParams.get('color') || '';
     const size = searchParams.get('size') || '';
 
-    // Base query
-    let q = query(
-      collection(db, 'clothing'),
-      orderBy('createdAt', 'desc'),
+    // Array de cláusulas da query (construímos dinamicamente)
+    const queryClauses: any[] = [
+      orderBy('createdAt', 'desc'), // Sempre ordena por createdAt (descendente)
       limit(PAGE_SIZE + 1)
-    );
+    ];
 
-    // Filtros
-    if (type || color || size) {
-      const filters: any[] = [];
-      if (type) filters.push(where('type', '==', type));
-      if (color) filters.push(where('color', '==', color));
-      if (size) filters.push(where('size', '==', size));
+    // Adiciona filtros se existirem
+    if (type) queryClauses.unshift(where('type', '==', type)); // unshift para where vir ANTES de orderBy
+    if (color) queryClauses.unshift(where('color', '==', color));
+    if (size) queryClauses.unshift(where('size', '==', size));
 
-      q = query(
-        collection(db, 'clothing'),
-        ...filters,
-        orderBy('createdAt', 'desc'),
-        limit(PAGE_SIZE + 1)
-      );
-    }
+    // Base query com todas as cláusulas
+    let q = query(collection(db, 'clothing'), ...queryClauses);
 
-    // Cursor (paginação)
+    // Cursor para paginação (apenas se cursor existir)
     if (cursor) {
+      // Query para encontrar o documento de cursor
       const cursorQuery = query(
         collection(db, 'clothing'),
         where('__name__', '==', cursor),
         limit(1)
       );
       const cursorSnap = await getDocs(cursorQuery);
+      
       if (!cursorSnap.empty) {
+        // Adiciona startAfter à query existente
         q = query(q, startAfter(cursorSnap.docs[0]));
+      } else {
+        // Se cursor inválido, retorna vazio
+        return NextResponse.json({ items: [], nextCursor: null });
       }
     }
 
@@ -82,9 +80,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: data, nextCursor });
   } catch (error: any) {
     console.error('API Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    
+    // Se for erro de índice, retorna mensagem amigável
+    if (error.code === 'failed-precondition') {
+      return NextResponse.json(
+        { 
+          error: 'Índice necessário. Crie o índice no link: ' + error.toString().match(/https:\/\/[^\s]+/)?.[0] 
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Erro interno do servidor', details: error.message },
+      { status: 500 }
     );
   }
 }
