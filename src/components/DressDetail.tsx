@@ -1,4 +1,3 @@
-// components/DressDetail.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,8 +5,7 @@ import Image from 'next/image';
 import { FaSearchPlus, FaTimes } from 'react-icons/fa';
 import { Product } from '@/types/products';
 
-// Número do WhatsApp (coloque no .env depois)
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '553888319214'; // Altere aqui ou use .env
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '553888319214';
 
 const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
@@ -15,12 +13,10 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
   const openZoom = (image: string) => setZoomedImage(image);
   const closeZoom = () => setZoomedImage(null);
 
-  // Função para abrir WhatsApp com mensagem personalizada
   const handleWhatsAppClick = () => {
     const message = `Olá, gostaria de fazer um orçamento do vestido ${dress.name}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -75,7 +71,6 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
 
           {/* Detalhes */}
           <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left space-y-4">
-            {/* Informações do vestido */}
             <div className="space-y-2 text-lg">
               <p className="font-[Poppins-light] text-gray-700">
                 <strong>Tipo:</strong> {dress.type}
@@ -83,19 +78,37 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
               <p className="font-[Poppins-light] text-gray-700">
                 <strong>Cor:</strong> {dress.color}
               </p>
-              <p className="font-[Poppins-light] text-gray-700">
-                <strong>Tamanho:</strong> {dress.size}
-              </p>
+
+              {/* Exibição dos tamanhos disponíveis */}
+              {dress.sizes && Array.isArray(dress.sizes) && dress.sizes.length > 0 ? (
+                <div>
+                  <p className="font-[Poppins-light] text-gray-700 mb-1">
+                    <strong>Tamanhos disponíveis:</strong>
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {dress.sizes.map((size, index) => (
+                      <span
+                        key={index}
+                        className="inline-block bg-[#641311] text-white text-sm px-3 py-1 rounded-full font-[Poppins-light]"
+                      >
+                        {size}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="font-[Poppins-light] text-gray-700">
+                  <strong>Tamanho:</strong> {dress.sizes || 'Único'}
+                </p>
+              )}
             </div>
 
-            {/* Destaque */}
             {dress.destaque && (
               <span className="inline-block bg-[#cc936b] text-white px-4 py-1 rounded-full text-sm font-[Poppins-light]">
                 Destaque
               </span>
             )}
 
-            {/* Botão de ação com WhatsApp */}
             <button
               onClick={handleWhatsAppClick}
               className="bg-[#641311] text-white py-2 px-6 rounded-md hover:bg-[#cc936b] transition-colors duration-300 font-[Poppins-light] mt-4"
