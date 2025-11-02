@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Trash2, Loader2, X } from 'lucide-react';
+import { Search, Trash2, Loader2, X, Edit } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Product } from '@/types/products';
+import { useRouter } from 'next/navigation'; // Para navegação
 
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,9 +14,9 @@ const ProductList: React.FC = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentSearch, setCurrentSearch] = useState(''); // termo usado na busca
+  const [currentSearch, setCurrentSearch] = useState('');
+  const router = useRouter(); // Para navegar ao editar
 
-  // Fetch produtos
   const fetchProducts = useCallback(async (cursor: string | null = null, append = false) => {
     if (!append) setLoading(true);
     else setLoadingMore(true);
@@ -49,20 +50,16 @@ const ProductList: React.FC = () => {
     }
   }, [currentSearch]);
 
-  // Carregar inicial (sem busca)
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Função de busca ao clicar no botão
   const handleSearch = () => {
     setCurrentSearch(searchTerm.trim());
     setNextCursor(null);
-       setProducts([]);
-    // A busca será disparada no próximo useEffect
+    setProducts([]);
   };
 
-  // Dispara busca quando currentSearch mudar
   useEffect(() => {
     fetchProducts();
   }, [currentSearch, fetchProducts]);
@@ -110,6 +107,10 @@ const ProductList: React.FC = () => {
     }
   };
 
+  const handleEdit = (productId: string) => {
+    router.push(`/adm/produtos/update/${productId}`);
+  };
+
   const clearSearch = () => {
     setSearchTerm('');
     setCurrentSearch('');
@@ -126,12 +127,11 @@ const ProductList: React.FC = () => {
 
   return (
     <div className="flex-1 p-4 md:p-8">
-      {/* Header com campo de busca + botão */}
+      {/* Header com busca */}
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-[Poppins-light]">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           Listar/Gerenciar Vestidos
         </h1>
-
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative flex-1 sm:w-64">
             <input
@@ -142,10 +142,7 @@ const ProductList: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-[Poppins-light]"
             />
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-            />
-            {/* Botão de busca */}
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             <button
               onClick={handleSearch}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-blue-600 hover:text-blue-800"
@@ -154,14 +151,8 @@ const ProductList: React.FC = () => {
               <Search className="w-5 h-5" />
             </button>
           </div>
-
-          {/* Limpar busca */}
           {currentSearch && (
-            <button
-              onClick={clearSearch}
-              className="p-2 text-gray-500 hover:text-gray-700"
-              title="Limpar busca"
-            >
+            <button onClick={clearSearch} className="p-2 text-gray-500 hover:text-gray-700" title="Limpar busca">
               <X className="w-5 h-5" />
             </button>
           )}
@@ -178,7 +169,7 @@ const ProductList: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">TIPO</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">COR</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">DESTAQUE</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[100px]">AÇÕES</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[140px]">AÇÕES</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -209,9 +200,24 @@ const ProductList: React.FC = () => {
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                  <button onClick={() => handleRemove(product.id)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Botão Editar */}
+                    <button
+                      onClick={() => handleEdit(product.id)}
+                      className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    {/* Botão Remover */}
+                    <button
+                      onClick={() => handleRemove(product.id)}
+                      className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
+                      title="Remover"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -249,8 +255,21 @@ const ProductList: React.FC = () => {
                   <label className="text-xs text-gray-600">Destaque</label>
                 </div>
               </div>
-              <div>
-                <button onClick={() => handleRemove(product.id)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
+              <div className="flex gap-1">
+                {/* Editar (mobile) */}
+                <button
+                  onClick={() => handleEdit(product.id)}
+                  className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
+                  title="Editar"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                {/* Remover (mobile) */}
+                <button
+                  onClick={() => handleRemove(product.id)}
+                  className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
+                  title="Remover"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
