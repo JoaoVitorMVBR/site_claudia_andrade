@@ -1,4 +1,3 @@
-// app/api/clothing/get/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import {
@@ -17,16 +16,19 @@ const PAGE_SIZE = 12;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
     const cursor = searchParams.get('cursor');
     const search = searchParams.get('search') || '';
     const size = searchParams.get('size') || '';
+    const type = searchParams.get('type') || '';   // NOVO
+    const color = searchParams.get('color') || ''; // NOVO
 
     const queryClauses: any[] = [
       orderBy('createdAt', 'desc'),
       limit(PAGE_SIZE + 1),
     ];
 
-    // FILTRO POR NOME (case-sensitive, começa com)
+    // FILTRO POR NOME (case-insensitive, começa com)
     if (search) {
       queryClauses.unshift(
         where('name', '>=', search),
@@ -37,6 +39,16 @@ export async function GET(request: NextRequest) {
     // FILTRO POR TAMANHO
     if (size) {
       queryClauses.unshift(where('sizes', 'array-contains', size));
+    }
+
+    // FILTRO POR TIPO
+    if (type) {
+      queryClauses.unshift(where('type', '==', type));
+    }
+
+    // FILTRO POR COR
+    if (color) {
+      queryClauses.unshift(where('color', '==', color));
     }
 
     let q = query(collection(db, 'clothing'), ...queryClauses);
