@@ -24,7 +24,7 @@ export default function HomePage() {
         <SocialProof />
         <FAQSection />
         <WppBtn 
-            phone="5511999998888" 
+            phone="553888319214" 
             message="Olá gostaria de mais informações!" 
             position="bottom-right" 
             size={64} 

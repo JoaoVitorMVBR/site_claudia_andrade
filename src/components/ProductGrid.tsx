@@ -23,7 +23,7 @@ const ProductGrid: React.FC = () => {
     // params.append('type', 'vestido');
 
     try {
-      const res = await fetch(`/api/?${params}`);
+      const res = await fetch(`/api/clothing/get/?${params}`);
       if (!res.ok) throw new Error('Erro ao carregar');
 
       const { items, nextCursor: newCursor } = await res.json();

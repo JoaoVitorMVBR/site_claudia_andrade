@@ -1,23 +1,17 @@
 'use client';
-
 import React, { useState } from "react";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { uploadImage } from "@/utils/uploadImage";
-import { addProduct } from "@/utils/addProduct";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface NewProduct {
   name: string;
   type: string;
   color: string;
-  size: string;
+  sizes: string[];
   frontImageFile: File | null;
   frontImageUrl: string | null;
   backImageFile: File | null;
   backImageUrl: string | null;
-  destaque: boolean | null,
 }
 
 const AddNewClothing: React.FC = () => {
@@ -25,66 +19,53 @@ const AddNewClothing: React.FC = () => {
     name: "",
     type: "",
     color: "",
-    size: "",
+    sizes: [],
     frontImageFile: null,
     frontImageUrl: null,
     backImageFile: null,
     backImageUrl: null,
-    destaque: false,
   });
 
-  const [statusMessage, setStatusMessage] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage(null);
     setLoading(true);
-
+  
     try {
-      // Validação
-      if (!product.name || !product.type || !product.color || !product.size) {
+      if (!product.name || !product.type || !product.color || product.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
       if (!product.frontImageFile || !product.backImageFile) {
         throw new Error("Envie ambas as imagens (frente e verso).");
       }
-
-      // 1. Gera ID temporário para nomear as imagens
-      const tempId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // 2. Upload das duas imagens com o mesmo ID
-      const [frontUrl, backUrl] = await Promise.all([
-        uploadImage(product.frontImageFile, `${tempId}_front`),
-        uploadImage(product.backImageFile, `${tempId}_back`),
-      ]);
-
-      // 3. Salva no Firestore → gera ID real
-      const firestoreId = await addProduct({
-        name: product.name,
-        type: product.type,
-        color: product.color,
-        size: product.size,
-        frontImageUrl: frontUrl,
-        backImageUrl: backUrl,
-        destaque: false,
+  
+      const formData = new FormData();
+      formData.append("name", product.name);
+      formData.append("type", product.type);
+      formData.append("color", product.color);
+  
+      // ⬇️ Envia cada tamanho separadamente
+      product.sizes.forEach(size => formData.append("size", size));
+  
+      formData.append("frontImage", product.frontImageFile);
+      formData.append("backImage", product.backImageFile);
+  
+      const res = await fetch("/api/clothing/create", {
+        method: "POST",
+        body: formData,
       });
-
-      // 4. Atualiza o documento com o próprio ID
-      await updateDoc(doc(db, "clothing", firestoreId), {
-        id: firestoreId,
-      });
-
+  
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao salvar no servidor.");
+  
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
-
-      // Reset
       setProduct({
-        name: "", type: "", color: "", size: "",
+        name: "", type: "", color: "", sizes: [],
         frontImageFile: null, frontImageUrl: null,
-        backImageFile: null, backImageUrl: null, destaque: false,
+        backImageFile: null, backImageUrl: null,
       });
     } catch (err: any) {
       console.error("Erro ao salvar:", err);
@@ -92,7 +73,7 @@ const AddNewClothing: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
@@ -133,6 +114,30 @@ const AddNewClothing: React.FC = () => {
     });
   };
 
+  const clothingTypes = [
+    { value: "", label: "Selecione o tipo" },
+    { value: "Detalhes bordados", label: "Detalhes bordados" },
+    { value: "Todo bordado", label: "Todo bordado" },
+    { value: "Liso", label: "Liso" },
+  ];
+
+  const sizes = [
+    { value: "34", label: "34" },
+    { value: "36", label: "36" },
+    { value: "38", label: "38" },
+    { value: "40", label: "40" },
+    { value: "42", label: "42" },
+    { value: "44", label: "44" },
+    { value: "46", label: "46" },
+    { value: "48", label: "48" },
+    { value: "50", label: "50" },
+  ];
+
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Array.from(e.target.selectedOptions, opt => opt.value);
+    setProduct(p => ({ ...p, sizes: selected }));
+  };
+
   return (
     <div className="flex-1 p-4 md:p-8 min-h-screen bg-gray-50">
       <h1 className="text-2xl md:text-3xl font-[Poppins-light] text-gray-800 mb-8">
@@ -150,37 +155,82 @@ const AddNewClothing: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
-        {/* CAMPOS DE TEXTO */}
+        {/* CAMPOS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-          {[
-            { key: "name", label: "Nome", placeholder: "ex.: Vestido Floral" },
-            { key: "type", label: "Tipo", placeholder: "ex.: Vestido" },
-            { key: "color", label: "Cor", placeholder: "ex.: Azul" },
-            { key: "size", label: "Tamanho", placeholder: "ex.: M" },
-          ].map(field => (
-            <div key={field.key}>
-              <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-                {field.label}
-              </label>
-              <input
-                type="text"
-                placeholder={field.placeholder}
-                value={(product as any)[field.key]}
-                required
-                onChange={e => setProduct(p => ({ ...p, [field.key]: e.target.value }))}
-                className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
-              />
-            </div>
-          ))}
+          {/* Nome */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Nome</label>
+            <input
+              type="text"
+              placeholder="ex.: Vestido Floral"
+              value={product.name}
+              required
+              onChange={e => setProduct(p => ({ ...p, name: e.target.value }))}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+            />
+          </div>
+
+          {/* Tipo */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
+            <select
+              value={product.type}
+              required
+              onChange={e => setProduct(p => ({ ...p, type: e.target.value }))}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+            >
+              {clothingTypes.map(option => (
+                <option key={option.value} value={option.value} disabled={option.value === ""}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Cor */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
+            <input
+              type="text"
+              placeholder="ex.: Azul"
+              value={product.color}
+              required
+              onChange={e => setProduct(p => ({ ...p, color: e.target.value }))}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+            />
+          </div>
+
+          {/* Tamanhos (múltiplo) */}
+          <div>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
+              Tamanhos disponíveis
+            </label>
+            <select
+              multiple
+              required
+              value={product.sizes}
+              onChange={handleSizeChange}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light] h-40"
+            >
+              {sizes.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1 font-[Poppins-light]">
+              Segure Ctrl (ou ⌘ no Mac) para selecionar vários tamanhos
+            </p>
+          </div>
         </div>
 
-        {/* UPLOAD DE IMAGENS */}
+        {/* UPLOADS (inalterado) */}
+        {/* ... (mantido igual ao seu original) ... */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
           {/* Frente */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-              Imagem da Frente *
-            </label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem da Frente *</label>
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageUpload(e, "front")}
@@ -220,9 +270,7 @@ const AddNewClothing: React.FC = () => {
 
           {/* Verso */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-              Imagem do Verso *
-            </label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem do Verso *</label>
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageUpload(e, "back")}
@@ -267,7 +315,7 @@ const AddNewClothing: React.FC = () => {
             type="submit"
             disabled={loading}
             className={`px-6 py-3 bg-[#641311] text-white font-[Poppins-light] rounded-lg shadow-md transition ${
-              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#54100e]"
             }`}
           >
             {loading ? "Salvando…" : "Salvar Vestido"}

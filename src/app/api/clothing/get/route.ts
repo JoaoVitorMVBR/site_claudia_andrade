@@ -1,14 +1,13 @@
-// app/api/clothing/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  startAfter, 
-  limit, 
-  getDocs, 
-  where 
+import {
+  collection,
+  query,
+  orderBy,
+  startAfter,
+  limit,
+  getDocs,
+  where,
 } from 'firebase/firestore';
 import { Product } from '@/types/products';
 
@@ -17,34 +16,44 @@ const PAGE_SIZE = 12;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
     const cursor = searchParams.get('cursor');
-    const type = searchParams.get('type') || '';
-    const color = searchParams.get('color') || '';
+    const search = searchParams.get('search') || '';
     const size = searchParams.get('size') || '';
+    const type = searchParams.get('type') || '';   // NOVO
+    const color = searchParams.get('color') || ''; // NOVO
 
-    // Base query
-    let q = query(
-      collection(db, 'clothing'),
+    const queryClauses: any[] = [
       orderBy('createdAt', 'desc'),
-      limit(PAGE_SIZE + 1)
-    );
+      limit(PAGE_SIZE + 1),
+    ];
 
-    // Filtros
-    if (type || color || size) {
-      const filters: any[] = [];
-      if (type) filters.push(where('type', '==', type));
-      if (color) filters.push(where('color', '==', color));
-      if (size) filters.push(where('size', '==', size));
-
-      q = query(
-        collection(db, 'clothing'),
-        ...filters,
-        orderBy('createdAt', 'desc'),
-        limit(PAGE_SIZE + 1)
+    // FILTRO POR NOME (case-insensitive, começa com)
+    if (search) {
+      queryClauses.unshift(
+        where('name', '>=', search),
+        where('name', '<=', search + '\uf8ff')
       );
     }
 
-    // Cursor (paginação)
+    // FILTRO POR TAMANHO
+    if (size) {
+      queryClauses.unshift(where('sizes', 'array-contains', size));
+    }
+
+    // FILTRO POR TIPO
+    if (type) {
+      queryClauses.unshift(where('type', '==', type));
+    }
+
+    // FILTRO POR COR
+    if (color) {
+      queryClauses.unshift(where('color', '==', color));
+    }
+
+    let q = query(collection(db, 'clothing'), ...queryClauses);
+
+    // Paginação com cursor
     if (cursor) {
       const cursorQuery = query(
         collection(db, 'clothing'),
@@ -54,27 +63,28 @@ export async function GET(request: NextRequest) {
       const cursorSnap = await getDocs(cursorQuery);
       if (!cursorSnap.empty) {
         q = query(q, startAfter(cursorSnap.docs[0]));
+      } else {
+        return NextResponse.json({ items: [], nextCursor: null });
       }
     }
 
     const snapshot = await getDocs(q);
     const docs = snapshot.docs;
-
     const hasMore = docs.length > PAGE_SIZE;
     const items = hasMore ? docs.slice(0, -1) : docs;
     const nextCursor = hasMore ? docs[docs.length - 1].id : null;
 
-    const data: Product[] = items.map(doc => {
+    const data: Product[] = items.map((doc) => {
       const d = doc.data();
       return {
         id: doc.id,
         name: d.name || '',
         type: d.type || '',
         color: d.color || '',
-        size: d.size || '',
+        sizes: Array.isArray(d.sizes) ? d.sizes : [],
         frontImageUrl: d.frontImageUrl || '',
         backImageUrl: d.backImageUrl || '',
-        destaque: d.destaque || false,
+        destaque: d.destaque ?? false,
         createdAt: d.createdAt?.toDate?.()?.toISOString() || '',
       };
     });
@@ -82,9 +92,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: data, nextCursor });
   } catch (error: any) {
     console.error('API Error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+      { error: 'Erro interno', details: error.message },
+      { status: 500 }
     );
   }
 }

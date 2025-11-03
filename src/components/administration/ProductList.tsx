@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Trash2, Loader2 } from 'lucide-react';
+import { Search, Trash2, Loader2, X, Edit } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { Product } from '@/types/products';
+import { useRouter } from 'next/navigation'; // Para navegação
 
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,54 +14,55 @@ const ProductList: React.FC = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({ type: '', color: '', size: '' });
+  const [currentSearch, setCurrentSearch] = useState('');
+  const router = useRouter(); // Para navegar ao editar
 
-  // Fetch com debounce
   const fetchProducts = useCallback(async (cursor: string | null = null, append = false) => {
     if (!append) setLoading(true);
     else setLoadingMore(true);
 
     const params = new URLSearchParams();
     if (cursor) params.append('cursor', cursor);
-    if (searchTerm) params.append('search', searchTerm);
-    if (filters.type) params.append('type', filters.type);
-    if (filters.color) params.append('color', filters.color);
-    if (filters.size) params.append('size', filters.size);
+    if (currentSearch) params.append('search', currentSearch);
 
     try {
-      const res = await fetch(`/api/?${params}`);
-      const { items, nextCursor } = await res.json();
+      const res = await fetch(`/api/clothing/get/?${params}`);
+      if (!res.ok) throw new Error('Falha na requisição');
+      const data = await res.json();
+
+      const items: Product[] = Array.isArray(data.items) ? data.items : [];
 
       if (append) {
         setProducts(prev => [...prev, ...items]);
       } else {
         setProducts(items);
       }
-      setNextCursor(nextCursor);
-      setHasMore(!!nextCursor);
+
+      setNextCursor(data.nextCursor || null);
+      setHasMore(!!data.nextCursor);
     } catch (error) {
       console.error(error);
+      setProducts([]);
       alert('Erro ao carregar vestidos.');
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [searchTerm, filters]);
+  }, [currentSearch]);
 
-  // Carregar inicial
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Debounce na busca/filtro
+  const handleSearch = () => {
+    setCurrentSearch(searchTerm.trim());
+    setNextCursor(null);
+    setProducts([]);
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts([]);
-      setNextCursor(null);
-      fetchProducts();
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchTerm, filters, fetchProducts]);
+    fetchProducts();
+  }, [currentSearch, fetchProducts]);
 
   const loadMore = () => {
     if (nextCursor && !loadingMore) {
@@ -74,6 +76,7 @@ const ProductList: React.FC = () => {
       alert('Máximo de 3 itens em destaque permitidos.');
       return;
     }
+
     try {
       await updateDoc(doc(db, 'clothing', productId), { destaque: !currentValue });
       setProducts(prev => prev.map(p => p.id === productId ? { ...p, destaque: !currentValue } : p));
@@ -83,44 +86,35 @@ const ProductList: React.FC = () => {
     }
   };
 
-const handleRemove = async (productId: string) => {
-  if (!confirm('Tem certeza?')) return;
+  const handleRemove = async (productId: string) => {
+    if (!confirm('Tem certeza?')) return;
 
-  console.log('Chamando DELETE para ID:', productId); // ← LOG AQUI
+    try {
+      const res = await fetch(`/api/clothing/${productId}`, {
+        method: 'DELETE',
+      });
 
-  try {
-    const res = await fetch(`/api/clothing/${productId}`, {
-      method: 'DELETE',
-    });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error('Falha ao deletar: ' + text);
+      }
 
-    console.log('Resposta da API:', res.status, res.ok); // ← LOG AQUI
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error('Erro da API:', text);
-      throw new Error('Falha ao deletar');
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      alert('Removido com sucesso!');
+    } catch (err: any) {
+      console.error('Erro no fetch:', err);
+      alert('Erro ao remover');
     }
-
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    alert('Removido com sucesso!');
-  } catch (err: any) {
-    console.error('Erro no fetch:', err);
-    alert('Erro ao remover');
-  }
-};
-
-  const handleFilterChange = (key: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const filterOptions = useMemo(() => {
-    const types = Array.from(new Set(products.map(p => p.type))).sort();
-    const colors = Array.from(new Set(products.map(p => p.color))).sort();
-    const sizes = Array.from(new Set(products.map(p => p.size))).sort();
-    return { types, colors, sizes };
-  }, [products]);
+  const handleEdit = (productId: string) => {
+    router.push(`/adm/produtos/update/${productId}`);
+  };
 
-  const filteredProducts = products; // já filtrado no backend
+  const clearSearch = () => {
+    setSearchTerm('');
+    setCurrentSearch('');
+  };
 
   if (loading && products.length === 0) {
     return (
@@ -133,48 +127,40 @@ const handleRemove = async (productId: string) => {
 
   return (
     <div className="flex-1 p-4 md:p-8">
-      {/* Header e Filtros (mantidos iguais) */}
+      {/* Header com busca */}
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 font-[Poppins-light]">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           Listar/Gerenciar Vestidos
         </h1>
-        <div className="relative w-full md:w-1/3">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="w-5 h-5 text-gray-400" />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <input
+              type="text"
+              placeholder="Buscar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-[Poppins-light]"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <button
+              onClick={handleSearch}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-blue-600 hover:text-blue-800"
+              title="Buscar"
+            >
+              <Search className="w-5 h-5" />
+            </button>
           </div>
-          <input
-            type="text"
-            placeholder="Buscar por nome ou tipo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-[Poppins-light]"
-          />
+          {currentSearch && (
+            <button onClick={clearSearch} className="p-2 text-gray-500 hover:text-gray-700" title="Limpar busca">
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </header>
 
-      <div className="mb-6 flex flex-wrap gap-3">
-        <select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
-          <option value="">Todos os Tipos</option>
-          {filterOptions.types.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <select value={filters.color} onChange={(e) => handleFilterChange('color', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
-          <option value="">Todas as Cores</option>
-          {filterOptions.colors.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <select value={filters.size} onChange={(e) => handleFilterChange('size', e.target.value)} className="flex-1 min-w-[120px] py-2 px-3 border border-gray-300 rounded-lg text-sm md:text-base focus:ring-blue-500 focus:border-blue-500 font-[Poppins-light]">
-          <option value="">Todos os Tamanhos</option>
-          {filterOptions.sizes.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        {(filters.type || filters.color || filters.size || searchTerm) && (
-          <button onClick={() => { setSearchTerm(''); setFilters({ type: '', color: '', size: '' }); }} className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-150 min-w-fit font-[Poppins-light]">
-            Limpar
-          </button>
-        )}
-      </div>
-
-      {/* Tabela e Cards (mantidos) */}
+      {/* Tabela Desktop */}
       <div className="md:overflow-x-auto bg-white rounded-lg shadow-md">
-        {/* Tabela Desktop */}
         <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -182,13 +168,12 @@ const handleRemove = async (productId: string) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[150px]">NOME</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">TIPO</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">COR</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">TAM</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider">DESTAQUE</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[100px]">AÇÕES</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase font-[Poppins-light] tracking-wider min-w-[140px]">AÇÕES</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredProducts.map((product) => (
+            {Array.isArray(products) && products.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-[Poppins-light]">
                   <div className="relative h-10 w-10">
@@ -206,7 +191,6 @@ const handleRemove = async (productId: string) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-[Poppins-light] text-gray-900">{product.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.type}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.color}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-[Poppins-light] text-gray-500">{product.size}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <input
                     type="checkbox"
@@ -216,9 +200,24 @@ const handleRemove = async (productId: string) => {
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                  <button onClick={() => handleRemove(product.id)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Botão Editar */}
+                    <button
+                      onClick={() => handleEdit(product.id)}
+                      className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    {/* Botão Remover */}
+                    <button
+                      onClick={() => handleRemove(product.id)}
+                      className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
+                      title="Remover"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -227,7 +226,7 @@ const handleRemove = async (productId: string) => {
 
         {/* Mobile Cards */}
         <div className="md:hidden divide-y divide-gray-200">
-          {filteredProducts.map((product) => (
+          {Array.isArray(products) && products.map((product) => (
             <div key={product.id} className="p-4 flex items-start gap-4">
               <div className="relative h-16 w-16 flex-shrink-0">
                 <Image
@@ -244,8 +243,7 @@ const handleRemove = async (productId: string) => {
                 <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
                 <div className="text-xs text-gray-500 mt-1">
                   <span>Tipo: {product.type}</span> <br />
-                  <span>Cor: {product.color}</span> <br />
-                  <span>Tamanho: {product.size}</span>
+                  <span>Cor: {product.color}</span>
                 </div>
                 <div className="mt-2 flex items-center gap-2">
                   <input
@@ -257,8 +255,21 @@ const handleRemove = async (productId: string) => {
                   <label className="text-xs text-gray-600">Destaque</label>
                 </div>
               </div>
-              <div>
-                <button onClick={() => { console.log('Deletando ID:', product.id); handleRemove(product.id)}} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150" title="Remover">
+              <div className="flex gap-1">
+                {/* Editar (mobile) */}
+                <button
+                  onClick={() => handleEdit(product.id)}
+                  className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition duration-150"
+                  title="Editar"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                {/* Remover (mobile) */}
+                <button
+                  onClick={() => handleRemove(product.id)}
+                  className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
+                  title="Remover"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -286,8 +297,11 @@ const handleRemove = async (productId: string) => {
         </div>
       )}
 
-      {products.length === 0 && !loading && (
-        <p className="mt-8 text-center text-gray-500">Nenhum vestido encontrado.</p>
+      {/* Mensagem de vazio */}
+      {(!Array.isArray(products) || products.length === 0) && !loading && (
+        <p className="mt-8 text-center text-gray-500">
+          {currentSearch ? `Nenhum vestido encontrado para "${currentSearch}".` : 'Nenhum vestido encontrado.'}
+        </p>
       )}
     </div>
   );

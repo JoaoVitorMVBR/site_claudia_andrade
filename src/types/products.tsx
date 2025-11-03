@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   type: string;
   color: string;
-  size: string;
+  sizes: string[];
   frontImageUrl: string;
   backImageUrl: string;
   destaque?: boolean;

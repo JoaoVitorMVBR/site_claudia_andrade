@@ -27,10 +27,10 @@ const Footer: React.FC = () => {
               Contato
             </h3>
             <p className="font-[Poppins-light] text-sm md:text-base">
-              Email: contato@seusite.com
+              E-mail : byclaudiaandrade@hotmail.com 
             </p>
             <p className="font-[Poppins-light] text-sm md:text-base">
-              Telefone: (11) 1234-5678
+              Telefone: (38) 3222-5704 
             </p>
           </div>
 
@@ -41,21 +41,21 @@ const Footer: React.FC = () => {
             </h3>
             <div className="flex justify-center md:justify-start space-x-6">
               <Link
-                href="https://instagram.com/seuperfil"
+                href="https://www.instagram.com/claudiaandradevestidoss/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <FaInstagram className="text-[#cc936b] text-2xl hover:text-white transition-colors duration-300" />
               </Link>
-              <Link
+              {/* <Link
                 href="https://facebook.com/seuperfil"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <FaFacebook className="text-[#cc936b] text-2xl hover:text-white transition-colors duration-300" />
-              </Link>
+              </Link> */}
               <Link
-                href="https://wa.me/551112345678"
+                href="https://wa.me/message/SGCAIYHEWCALP1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
