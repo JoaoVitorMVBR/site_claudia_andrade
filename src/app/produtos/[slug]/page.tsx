@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import { notFound } from 'next/navigation';
 import { Product } from '@/types/products';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.claudiandrade.com.br/';
 
 /* ========== GERAR PÁGINAS ESTÁTICAS ========== */
 export async function generateStaticParams() {
