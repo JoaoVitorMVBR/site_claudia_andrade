@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
     { name: 'Vestidos', href: '/produtos' },
     // { name: 'Contato', href: '/contato' },
     { name: 'Sobre Nós', href: '/sobre' },
-    { name: 'Painel', href: '/adm/produtos' },
+    // { name: 'Painel', href: '/adm/produtos' },
   ]
 
   const LinkWrapper = ({
