@@ -25,15 +25,20 @@ const AddNewClothing: React.FC = () => {
     backImageFile: null,
     backImageUrl: null,
   });
-
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Função para padronizar: primeira letra maiúscula, resto minúsculo + trim
+  const formatInput = (value: string): string => {
+    if (!value) return "";
+    return value.trim().charAt(0).toUpperCase() + value.trim().slice(1).toLowerCase();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage(null);
     setLoading(true);
-  
+
     try {
       if (!product.name || !product.type || !product.color || product.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
@@ -41,26 +46,25 @@ const AddNewClothing: React.FC = () => {
       if (!product.frontImageFile || !product.backImageFile) {
         throw new Error("Envie ambas as imagens (frente e verso).");
       }
-  
+
       const formData = new FormData();
       formData.append("name", product.name);
       formData.append("type", product.type);
       formData.append("color", product.color);
-  
-      // ⬇️ Envia cada tamanho separadamente
+
       product.sizes.forEach(size => formData.append("size", size));
-  
+
       formData.append("frontImage", product.frontImageFile);
       formData.append("backImage", product.backImageFile);
-  
+
       const res = await fetch("/api/clothing/create", {
         method: "POST",
         body: formData,
       });
-  
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao salvar no servidor.");
-  
+
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
       setProduct({
         name: "", type: "", color: "", sizes: [],
@@ -73,7 +77,7 @@ const AddNewClothing: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
@@ -86,7 +90,6 @@ const AddNewClothing: React.FC = () => {
     } else {
       file = e.target.files?.[0];
     }
-
     if (file && file.size <= 10 * 1024 * 1024) {
       const url = URL.createObjectURL(file);
       setProduct(p => ({
@@ -143,7 +146,6 @@ const AddNewClothing: React.FC = () => {
       <h1 className="text-2xl md:text-3xl font-[Poppins-light] text-gray-800 mb-8">
         Adicionar Novo Vestido
       </h1>
-
       {statusMessage && (
         <div
           className={`p-3 mb-6 rounded-md ${
@@ -153,7 +155,6 @@ const AddNewClothing: React.FC = () => {
           {statusMessage.message}
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
         {/* CAMPOS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
@@ -165,11 +166,10 @@ const AddNewClothing: React.FC = () => {
               placeholder="ex.: Vestido Floral"
               value={product.name}
               required
-              onChange={e => setProduct(p => ({ ...p, name: e.target.value }))}
+              onChange={e => setProduct(p => ({ ...p, name: formatInput(e.target.value) }))}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
             />
           </div>
-
           {/* Tipo */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
@@ -186,7 +186,6 @@ const AddNewClothing: React.FC = () => {
               ))}
             </select>
           </div>
-
           {/* Cor */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
@@ -195,11 +194,10 @@ const AddNewClothing: React.FC = () => {
               placeholder="ex.: Azul"
               value={product.color}
               required
-              onChange={e => setProduct(p => ({ ...p, color: e.target.value }))}
+              onChange={e => setProduct(p => ({ ...p, color: formatInput(e.target.value) }))}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
             />
           </div>
-
           {/* Tamanhos (múltiplo) */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
@@ -219,14 +217,12 @@ const AddNewClothing: React.FC = () => {
               ))}
             </select>
             <p className="text-xs text-gray-400 mt-1 font-[Poppins-light]">
-              Segure Ctrl (ou ⌘ no Mac) para selecionar vários tamanhos
+              Segure Ctrl (ou Command no Mac) para selecionar vários tamanhos
             </p>
           </div>
         </div>
 
-        {/* UPLOADS (inalterado) */}
-        {/* ... (mantido igual ao seu original) ... */}
-
+        {/* UPLOADS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
           {/* Frente */}
           <div>
@@ -267,7 +263,6 @@ const AddNewClothing: React.FC = () => {
               )}
             </div>
           </div>
-
           {/* Verso */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem do Verso *</label>

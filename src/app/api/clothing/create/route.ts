@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage, db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,27 +14,38 @@ export async function POST(request: NextRequest) {
     const frontImage = formData.get('frontImage') as File;
     const backImage = formData.get('backImage') as File;
 
-    // Captura múltiplos tamanhos (pode haver vários `size` no formData)
+    // Captura múltiplos tamanhos
     const sizes = (formData.getAll('size') as string[])
       .map(size => size.trim())
       .filter(size => size !== '');
 
-    // Validação
+    // Validação básica
     if (!name || !type || !color || sizes.length === 0 || !frontImage || !backImage) {
       return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
     }
 
-    // Valida tamanho das imagens (máx. 10MB)
+    // Validação de tamanho das imagens
     if (frontImage.size > 10 * 1024 * 1024 || backImage.size > 10 * 1024 * 1024) {
       return NextResponse.json({ error: 'Imagem muito grande (máx. 10MB).' }, { status: 400 });
     }
 
-    // 1️⃣ Cria o documento no Firestore (sem URLs ainda)
+    // Verificar se já existe um produto com o mesmo nome
+    const q = query(collection(db, 'clothing'), where('name', '==', name.trim()));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return NextResponse.json(
+        { error: 'Já existe um produto com este nome.' },
+        { status: 409 } // 409 Conflict
+      );
+    }
+
+    // 1. Cria o documento no Firestore (sem URLs ainda)
     const docRef = await addDoc(collection(db, 'clothing'), {
-      name,
+      name: name.trim(),
       type,
       color,
-      sizes, // <--- agora é array real
+      sizes,
       frontImageUrl: '',
       backImageUrl: '',
       destaque: false,
@@ -43,20 +54,20 @@ export async function POST(request: NextRequest) {
 
     const productId = docRef.id;
 
-    // 2️⃣ Faz upload das imagens em paralelo
+    // 2. Upload das imagens em paralelo
     const [frontUrl, backUrl] = await Promise.all([
       uploadImage(frontImage, `${productId}_front`),
       uploadImage(backImage, `${productId}_back`),
     ]);
 
-    // 3️⃣ Atualiza o documento com as URLs e o ID
+    // 3. Atualiza com URLs e ID
     await updateDoc(docRef, {
       id: productId,
       frontImageUrl: frontUrl,
       backImageUrl: backUrl,
     });
 
-    return NextResponse.json({ success: true, id: productId });
+    return NextResponse.json({ success: true, id: productId }, { status: 201 });
   } catch (error: any) {
     console.error('Erro ao criar produto:', error);
     return NextResponse.json(

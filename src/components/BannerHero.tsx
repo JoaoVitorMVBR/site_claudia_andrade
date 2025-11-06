@@ -5,13 +5,13 @@ import Image from 'next/image'
 
 const BannerHero: React.FC = () => {
   return (
-    <section className="relative w-full h-[60vh] sm:h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden">
+    <section className="relative w-full h-[60vh] sm:h-[180vh] md:h-[190vh] flex items-center justify-center overflow-hidden">
       {/* Imagem de fundo */}
       <Image
-        src="/images/zara.jpg" // Substitua pelo caminho real da sua imagem
+        src="/images/claudia-resize.jpg" // Substitua pelo caminho real da sua imagem
         alt="Coleção de Vestidos"
         fill
-        className="object-cover object-top"
+        className="object-cover object-[50%_30%]"
         priority // Carrega imediatamente por ser Hero
         quality={85} // Equilíbrio entre qualidade e desempenho (padrão é 75)
         sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 100vw" // Ajuda o navegador a escolher o tamanho certo
