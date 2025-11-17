@@ -46,12 +46,10 @@ const AddNewClothing: React.FC = () => {
         color: formatInput(product.color),
       };
 
-      // Validações de texto
+      // Validações
       if (!finalProduct.name || !finalProduct.type || !finalProduct.color || finalProduct.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
-
-      // Nova regra: pelo menos UMA imagem
       if (!finalProduct.frontImageFile && !finalProduct.backImageFile) {
         throw new Error("Envie pelo menos uma imagem (frente ou verso).");
       }
@@ -61,18 +59,32 @@ const AddNewClothing: React.FC = () => {
       formData.append("type", finalProduct.type);
       formData.append("color", finalProduct.color);
       finalProduct.sizes.forEach(size => formData.append("size", size));
-
-      // Envia apenas as imagens que existirem
       if (finalProduct.frontImageFile) formData.append("frontImage", finalProduct.frontImageFile);
       if (finalProduct.backImageFile) formData.append("backImage", finalProduct.backImageFile);
 
-      const res = await fetch("/api/clothing/create", {
+      // URL CORRETA PARA PRODUÇÃO (a única mudança crítica)
+      const baseUrl = typeof window !== "undefined" 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_BASE_URL || "";
+
+      const res = await fetch(`${baseUrl}/api/clothing/create`, {
         method: "POST",
         body: formData,
       });
 
+      // Proteção contra respostas que não são JSON (HTML de erro, 404, etc)
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Resposta não JSON:", text.substring(0, 500));
+        throw new Error("Erro no servidor. Tente novamente mais tarde.");
+      }
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao salvar no servidor.");
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao salvar o vestido.");
+      }
 
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
       setProduct({
@@ -80,6 +92,7 @@ const AddNewClothing: React.FC = () => {
         frontImageFile: null, frontImageUrl: null,
         backImageFile: null, backImageUrl: null,
       });
+
     } catch (err: any) {
       console.error("Erro ao salvar:", err);
       setStatusMessage({ type: "error", message: err.message || "Erro ao salvar." });
