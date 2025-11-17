@@ -28,7 +28,7 @@ const AddNewClothing: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Função para padronizar: primeira letra maiúscula, resto minúsculo + trim
+  // Formatação mantida exatamente como você criou
   const formatInput = (value: string): string => {
     if (!value) return "";
     return value.trim().charAt(0).toUpperCase() + value.trim().slice(1).toLowerCase();
@@ -40,22 +40,31 @@ const AddNewClothing: React.FC = () => {
     setLoading(true);
 
     try {
-      if (!product.name || !product.type || !product.color || product.sizes.length === 0) {
+      const finalProduct = {
+        ...product,
+        name: formatInput(product.name),
+        color: formatInput(product.color),
+      };
+
+      // Validações de texto
+      if (!finalProduct.name || !finalProduct.type || !finalProduct.color || finalProduct.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
-      if (!product.frontImageFile || !product.backImageFile) {
-        throw new Error("Envie ambas as imagens (frente e verso).");
+
+      // Nova regra: pelo menos UMA imagem
+      if (!finalProduct.frontImageFile && !finalProduct.backImageFile) {
+        throw new Error("Envie pelo menos uma imagem (frente ou verso).");
       }
 
       const formData = new FormData();
-      formData.append("name", product.name);
-      formData.append("type", product.type);
-      formData.append("color", product.color);
+      formData.append("name", finalProduct.name);
+      formData.append("type", finalProduct.type);
+      formData.append("color", finalProduct.color);
+      finalProduct.sizes.forEach(size => formData.append("size", size));
 
-      product.sizes.forEach(size => formData.append("size", size));
-
-      formData.append("frontImage", product.frontImageFile);
-      formData.append("backImage", product.backImageFile);
+      // Envia apenas as imagens que existirem
+      if (finalProduct.frontImageFile) formData.append("frontImage", finalProduct.frontImageFile);
+      if (finalProduct.backImageFile) formData.append("backImage", finalProduct.backImageFile);
 
       const res = await fetch("/api/clothing/create", {
         method: "POST",
@@ -125,15 +134,9 @@ const AddNewClothing: React.FC = () => {
   ];
 
   const sizes = [
-    { value: "34", label: "34" },
-    { value: "36", label: "36" },
-    { value: "38", label: "38" },
-    { value: "40", label: "40" },
-    { value: "42", label: "42" },
-    { value: "44", label: "44" },
-    { value: "46", label: "46" },
-    { value: "48", label: "48" },
-    { value: "50", label: "50" },
+    { value: "34", label: "34" }, { value: "36", label: "36" }, { value: "38", label: "38" },
+    { value: "40", label: "40" }, { value: "42", label: "42" }, { value: "44", label: "44" },
+    { value: "46", label: "46" }, { value: "48", label: "48" }, { value: "50", label: "50" },
   ];
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -146,17 +149,14 @@ const AddNewClothing: React.FC = () => {
       <h1 className="text-2xl md:text-3xl font-[Poppins-light] text-gray-800 mb-8">
         Adicionar Novo Vestido
       </h1>
+
       {statusMessage && (
-        <div
-          className={`p-3 mb-6 rounded-md ${
-            statusMessage.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
+        <div className={`p-3 mb-6 rounded-md ${statusMessage.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
           {statusMessage.message}
         </div>
       )}
+
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
-        {/* CAMPOS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
           {/* Nome */}
           <div>
@@ -170,6 +170,7 @@ const AddNewClothing: React.FC = () => {
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
             />
           </div>
+
           {/* Tipo */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
@@ -186,19 +187,25 @@ const AddNewClothing: React.FC = () => {
               ))}
             </select>
           </div>
-          {/* Cor */}
+
+          {/* Cor – aceita espaços */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
             <input
               type="text"
-              placeholder="ex.: Azul"
+              placeholder="ex.: Azul Marinho"
               value={product.color}
               required
-              onChange={e => setProduct(p => ({ ...p, color: formatInput(e.target.value) }))}
+              onChange={e => setProduct(p => ({ ...p, color: e.target.value }))}
+              onBlur={e => {
+                const formatted = formatInput(e.target.value);
+                setProduct(p => ({ ...p, color: formatted }));
+              }}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
             />
           </div>
-          {/* Tamanhos (múltiplo) */}
+
+          {/* Tamanhos */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
               Tamanhos disponíveis
@@ -222,11 +229,13 @@ const AddNewClothing: React.FC = () => {
           </div>
         </div>
 
-        {/* UPLOADS */}
+        {/* UPLOADS – agora com indicação clara */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
           {/* Frente */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem da Frente *</label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
+              Imagem da Frente <span className="text-gray-500 text-xs">(obrigatória)</span>
+            </label>
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageUpload(e, "front")}
@@ -251,7 +260,7 @@ const AddNewClothing: React.FC = () => {
                   <p className="text-sm text-gray-500">
                     <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload</span> ou arraste
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, ≤ 10MB</p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF ≤ 10MB</p>
                   <input
                     id="front-file-upload"
                     type="file"
@@ -263,9 +272,12 @@ const AddNewClothing: React.FC = () => {
               )}
             </div>
           </div>
+
           {/* Verso */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Imagem do Verso *</label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
+              Imagem do Verso <span className="text-gray-500 text-xs">(opcional)</span>
+            </label>
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageUpload(e, "back")}
@@ -290,7 +302,7 @@ const AddNewClothing: React.FC = () => {
                   <p className="text-sm text-gray-500">
                     <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload</span> ou arraste
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, ≤ 10MB</p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF ≤ 10MB</p>
                   <input
                     id="back-file-upload"
                     type="file"
@@ -302,6 +314,10 @@ const AddNewClothing: React.FC = () => {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="text-sm text-gray-600 mb-6 font-[Poppins-light]">
+          * Pelo menos a imagem da frente é obrigatória.
         </div>
 
         {/* BOTÃO */}
