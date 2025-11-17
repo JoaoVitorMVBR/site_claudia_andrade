@@ -7,10 +7,10 @@ const About: React.FC = () => {
       {/* Imagem de fundo */}
       <div className="absolute inset-0">
         <Image
-          src="/images/zara.jpg"
-          alt="Sobre o Ateliê Sofia"
+          src="/images/claudia1.jpeg"
+          alt=""
           fill
-          className="object-cover object-center w-full h-full"
+          className="object-cover object-[center_25%] w-full h-full"
           quality={75}
           sizes="(max-width: 640px) 100vw, 60vw" // Ajuste responsivo
         />
