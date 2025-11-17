@@ -11,36 +11,47 @@ export async function POST(request: NextRequest) {
     const name = formData.get('name') as string;
     const type = formData.get('type') as string;
     const color = formData.get('color') as string;
-    const frontImage = formData.get('frontImage') as File;
-    const backImage = formData.get('backImage') as File;
+    const frontImage = formData.get('frontImage') as File | null;
+    const backImage = formData.get('backImage') as File | null;
 
     // Captura múltiplos tamanhos
     const sizes = (formData.getAll('size') as string[])
       .map(size => size.trim())
       .filter(size => size !== '');
 
-    // Validação básica
-    if (!name || !type || !color || sizes.length === 0 || !frontImage || !backImage) {
-      return NextResponse.json({ error: 'Todos os campos são obrigatórios.' }, { status: 400 });
-    }
-
-    // Validação de tamanho das imagens
-    if (frontImage.size > 10 * 1024 * 1024 || backImage.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'Imagem muito grande (máx. 10MB).' }, { status: 400 });
-    }
-
-    // Verificar se já existe um produto com o mesmo nome
-    const q = query(collection(db, 'clothing'), where('name', '==', name.trim()));
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
+    // Validação: frente é obrigatória, verso é opcional
+    if (!name || !type || !color || sizes.length === 0 || !frontImage) {
       return NextResponse.json(
-        { error: 'Já existe um produto com este nome.' },
-        { status: 409 } // 409 Conflict
+        { error: 'Nome, tipo, cor, tamanhos e imagem da frente são obrigatórios.' },
+        { status: 400 }
       );
     }
 
-    // 1. Cria o documento no Firestore (sem URLs ainda)
+    // Validação de tamanho das imagens (só verifica se existir)
+    if (frontImage.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'Imagem da frente muito grande (máx. 10MB).' },
+        { status: 400 }
+      );
+    }
+    if (backImage && backImage.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'Imagem do verso muito grande (máx. 10MB).' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar duplicidade por nome
+    const q = query(collection(db, 'clothing'), where('name', '==', name.trim()));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      return NextResponse.json(
+        { error: 'Já existe um vestido com este nome.' },
+        { status: 409 }
+      );
+    }
+
+    // 1. Criar documento no Firestore (sem URLs ainda)
     const docRef = await addDoc(collection(db, 'clothing'), {
       name: name.trim(),
       type,
@@ -54,32 +65,39 @@ export async function POST(request: NextRequest) {
 
     const productId = docRef.id;
 
-    // 2. Upload das imagens em paralelo
-    const [frontUrl, backUrl] = await Promise.all([
-      uploadImage(frontImage, `${productId}_front`),
-      uploadImage(backImage, `${productId}_back`),
-    ]);
+    // 2. Upload das imagens (só as que existirem)
+    const frontUrl = await uploadImage(frontImage, `${productId}_front`);
+    const backUrlPromise = backImage ? uploadImage(backImage, `${productId}_back`) : Promise.resolve(null);
 
-    // 3. Atualiza com URLs e ID
+    const backUrl = await backUrlPromise;
+
+    // 3. Atualizar documento com URLs
     await updateDoc(docRef, {
       id: productId,
       frontImageUrl: frontUrl,
-      backImageUrl: backUrl,
+      backImageUrl: backUrl || '', // se não tiver verso, salva string vazia
     });
 
-    return NextResponse.json({ success: true, id: productId }, { status: 201 });
+    return NextResponse.json(
+      { success: true, id: productId, message: 'Vestido criado com sucesso!' },
+      { status: 201 }
+    );
+
   } catch (error: any) {
     console.error('Erro ao criar produto:', error);
     return NextResponse.json(
-      { error: 'Erro interno.', details: error.message },
+      { error: 'Erro ao salvar o vestido.', details: error.message },
       { status: 500 }
     );
   }
 }
 
+// Função segura: só recebe File válido (nunca null)
 async function uploadImage(file: File, filename: string): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const storageRef = ref(storage, `clothing/${filename}`);
-  const snapshot = await uploadBytes(storageRef, buffer, { contentType: file.type });
-  return getDownloadURL(snapshot.ref);
+  const snapshot = await uploadBytes(storageRef, buffer, {
+    contentType: file.type || 'application/octet-stream',
+  });
+  return await getDownloadURL(snapshot.ref);
 }
