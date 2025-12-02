@@ -1,16 +1,17 @@
 'use client';
+
 import React, { useState } from "react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase"; // Seu arquivo firebase.ts já corrigido
 
 interface NewProduct {
   name: string;
   type: string;
   color: string;
   sizes: string[];
-  frontImageFile: File | null;
   frontImageUrl: string | null;
-  backImageFile: File | null;
   backImageUrl: string | null;
 }
 
@@ -20,18 +21,112 @@ const AddNewClothing: React.FC = () => {
     type: "",
     color: "",
     sizes: [],
-    frontImageFile: null,
     frontImageUrl: null,
-    backImageFile: null,
     backImageUrl: null,
   });
+
+  // Preview local (apenas para exibir no formulário)
+  const [frontPreview, setFrontPreview] = useState<string | null>(null);
+  const [backPreview, setBackPreview] = useState<string | null>(null);
+
+  const [uploadingFront, setUploadingFront] = useState(false);
+  const [uploadingBack, setUploadingBack] = useState(false);
+  const [progressFront, setProgressFront] = useState(0);
+  const [progressBack, setProgressBack] = useState(0);
+
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Formatação mantida exatamente como você criou
   const formatInput = (value: string): string => {
     if (!value) return "";
     return value.trim().charAt(0).toUpperCase() + value.trim().slice(1).toLowerCase();
+  };
+
+  // Upload de imagem direto pro Firebase Storage
+  const uploadImage = async (file: File, type: "front" | "back"): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const storageRef = ref(storage, `clothing/${fileName}`);
+
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (type === "front") setProgressFront(progress);
+          if (type === "back") setProgressBack(progress);
+        },
+        (error) => reject(error),
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(url);
+        }
+      );
+    });
+  };
+
+  const handleImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
+    type: "front" | "back"
+  ) => {
+    let file: File | null = null;
+
+    if ("dataTransfer" in e) {
+      file = e.dataTransfer.files[0];
+      e.preventDefault();
+    } else if (e.target.files) {
+      file = e.target.files[0];
+    }
+
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      setStatusMessage({ type: "error", message: "Imagem muito grande (máx. 20MB)." });
+      return;
+    }
+
+    // Preview local
+    const previewUrl = URL.createObjectURL(file);
+    if (type === "front") setFrontPreview(previewUrl);
+    if (type === "back") setBackPreview(previewUrl);
+
+    // Upload imediato para Firebase
+    if (type === "front") setUploadingFront(true);
+    if (type === "back") setUploadingBack(true);
+
+    uploadImage(file, type)
+      .then((url) => {
+        setProduct(p => ({ ...p, [type === "front" ? "frontImageUrl" : "backImageUrl"]: url }));
+        setStatusMessage({ type: "success", message: `Imagem da ${type === "front" ? "frente" : "trás"} enviada com sucesso!` });
+      })
+      .catch((err) => {
+        console.error(err);
+        setStatusMessage({ type: "error", message: "Erro ao enviar imagem. Tente novamente." });
+        if (type === "front") setFrontPreview(null);
+        if (type === "back") setBackPreview(null);
+      })
+      .finally(() => {
+        if (type === "front") {
+          setUploadingFront(false);
+          setProgressFront(0);
+        }
+        if (type === "back") {
+          setUploadingBack(false);
+          setProgressBack(0);
+        }
+      });
+  };
+
+  const removeImage = (type: "front" | "back") => {
+    if (type === "front") {
+      setFrontPreview(null);
+      setProduct(p => ({ ...p, frontImageUrl: null }));
+    } else {
+      setBackPreview(null);
+      setProduct(p => ({ ...p, backImageUrl: null }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,97 +141,34 @@ const AddNewClothing: React.FC = () => {
         color: formatInput(product.color),
       };
 
-      // Validações
       if (!finalProduct.name || !finalProduct.type || !finalProduct.color || finalProduct.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
-      if (!finalProduct.frontImageFile && !finalProduct.backImageFile) {
-        throw new Error("Envie pelo menos uma imagem (frente ou verso).");
+      if (!finalProduct.frontImageUrl) {
+        throw new Error("A imagem da frente é obrigatória.");
       }
 
-      const formData = new FormData();
-      formData.append("name", finalProduct.name);
-      formData.append("type", finalProduct.type);
-      formData.append("color", finalProduct.color);
-      finalProduct.sizes.forEach(size => formData.append("size", size));
-      if (finalProduct.frontImageFile) formData.append("frontImage", finalProduct.frontImageFile);
-      if (finalProduct.backImageFile) formData.append("backImage", finalProduct.backImageFile);
-
-      // URL CORRETA PARA PRODUÇÃO (a única mudança crítica)
-      const baseUrl = typeof window !== "undefined" 
-        ? window.location.origin 
-        : process.env.NEXT_PUBLIC_BASE_URL || "";
-
-      const res = await fetch(`${baseUrl}/api/clothing/create`, {
+      const res = await fetch("/api/clothing/create", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalProduct),
       });
 
-      // Proteção contra respostas que não são JSON (HTML de erro, 404, etc)
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        console.error("Resposta não JSON:", text.substring(0, 500));
-        throw new Error("Erro no servidor. Tente novamente mais tarde.");
-      }
-
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.error || "Erro ao salvar o vestido.");
+        const error = await res.json();
+        throw new Error(error.error || "Erro ao salvar o vestido.");
       }
 
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
-      setProduct({
-        name: "", type: "", color: "", sizes: [],
-        frontImageFile: null, frontImageUrl: null,
-        backImageFile: null, backImageUrl: null,
-      });
+      setProduct({ name: "", type: "", color: "", sizes: [], frontImageUrl: null, backImageUrl: null });
+      setFrontPreview(null);
+      setBackPreview(null);
 
     } catch (err: any) {
-      console.error("Erro ao salvar:", err);
       setStatusMessage({ type: "error", message: err.message || "Erro ao salvar." });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
-    type: "front" | "back"
-  ) => {
-    let file: File | undefined;
-    if ("dataTransfer" in e) {
-      file = e.dataTransfer.files[0];
-      e.preventDefault();
-    } else {
-      file = e.target.files?.[0];
-    }
-    if (file && file.size <= 10 * 1024 * 1024) {
-      const url = URL.createObjectURL(file);
-      setProduct(p => ({
-        ...p,
-        ...(type === "front"
-          ? { frontImageFile: file, frontImageUrl: url }
-          : { backImageFile: file, backImageUrl: url }),
-      }));
-    } else if (file) {
-      setStatusMessage({ type: "error", message: "Arquivo muito grande (máx. 10MB)." });
-    }
-  };
-
-  const removeImage = (type: "front" | "back") => {
-    setProduct(p => {
-      if (type === "front" && p.frontImageUrl) {
-        URL.revokeObjectURL(p.frontImageUrl);
-        return { ...p, frontImageFile: null, frontImageUrl: null };
-      }
-      if (type === "back" && p.backImageUrl) {
-        URL.revokeObjectURL(p.backImageUrl);
-        return { ...p, backImageFile: null, backImageUrl: null };
-      }
-      return p;
-    });
   };
 
   const clothingTypes = [
@@ -147,15 +179,8 @@ const AddNewClothing: React.FC = () => {
   ];
 
   const sizes = [
-    { value: "34", label: "34" }, { value: "36", label: "36" }, { value: "38", label: "38" },
-    { value: "40", label: "40" }, { value: "42", label: "42" }, { value: "44", label: "44" },
-    { value: "46", label: "46" }, { value: "48", label: "48" }, { value: "50", label: "50" },
-  ];
-
-  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-    setProduct(p => ({ ...p, sizes: selected }));
-  };
+    "34", "36", "38", "40", "42", "44", "46", "48", "50"
+  ].map(s => ({ value: s, label: s }));
 
   return (
     <div className="flex-1 p-4 md:p-8 min-h-screen bg-gray-50">
@@ -164,122 +189,130 @@ const AddNewClothing: React.FC = () => {
       </h1>
 
       {statusMessage && (
-        <div className={`p-3 mb-6 rounded-md ${statusMessage.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+        <div className={`p-4 mb-6 rounded-md text-sm ${statusMessage.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
           {statusMessage.message}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-lg shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-          {/* Nome */}
+        {/* Campos de texto */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Nome</label>
             <input
               type="text"
-              placeholder="ex.: Vestido Floral"
               value={product.name}
+              onChange={e => setProduct(p => ({ ...p, name: e.target.value }))}
+              onBlur={e => setProduct(p => ({ ...p, name: formatInput(e.target.value) }))}
               required
-              onChange={e => setProduct(p => ({ ...p, name: formatInput(e.target.value) }))}
-              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+              className="w-full border-gray-300 rounded-lg p-2.5"
+              placeholder="ex.: Vestido Floral"
             />
           </div>
 
-          {/* Tipo */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tipo</label>
             <select
               value={product.type}
-              required
               onChange={e => setProduct(p => ({ ...p, type: e.target.value }))}
-              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+              required
+              className="w-full border-gray-300 rounded-lg p-2.5"
             >
-              {clothingTypes.map(option => (
-                <option key={option.value} value={option.value} disabled={option.value === ""}>
-                  {option.label}
+              {clothingTypes.map(o => (
+                <option key={o.value} value={o.value} disabled={!o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Cor – aceita espaços */}
           <div>
             <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Cor</label>
             <input
               type="text"
-              placeholder="ex.: Azul Marinho"
               value={product.color}
-              required
               onChange={e => setProduct(p => ({ ...p, color: e.target.value }))}
-              onBlur={e => {
-                const formatted = formatInput(e.target.value);
-                setProduct(p => ({ ...p, color: formatted }));
-              }}
-              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light]"
+              onBlur={e => setProduct(p => ({ ...p, color: formatInput(e.target.value) }))}
+              required
+              className="w-full border-gray-300 rounded-lg p-2.5"
+              placeholder="ex.: Azul Marinho"
             />
           </div>
 
-          {/* Tamanhos */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-              Tamanhos disponíveis
-            </label>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">Tamanhos</label>
             <select
               multiple
-              required
               value={product.sizes}
-              onChange={handleSizeChange}
-              className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2.5 text-gray-900 font-[Poppins-light] h-40"
+              onChange={e => setProduct(p => ({
+                ...p,
+                sizes: Array.from(e.target.selectedOptions, o => o.value)
+              }))}
+              required
+              className="w-full border-gray-300 rounded-lg p-2.5 h-40"
             >
-              {sizes.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
+              {sizes.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
-            <p className="text-xs text-gray-400 mt-1 font-[Poppins-light]">
-              Segure Ctrl (ou Command no Mac) para selecionar vários tamanhos
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Ctrl + clique para selecionar vários</p>
           </div>
         </div>
 
-        {/* UPLOADS – agora com indicação clara */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
+        {/* Uploads */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Frente */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-              Imagem da Frente <span className="text-gray-500 text-xs">(obrigatória)</span>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-2">
+              Imagem da Frente <span className="text-red-500">*</span>
             </label>
             <div
               onDragOver={e => e.preventDefault()}
-              onDrop={e => handleImageUpload(e, "front")}
-              className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
-                product.frontImageUrl ? "border-gray-200" : "border-gray-300 hover:border-blue-400 cursor-pointer"
-              } font-[Poppins-light]`}
+              onDrop={e => handleImageSelect(e, "front")}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${frontPreview || product.frontImageUrl ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
             >
-              {product.frontImageUrl ? (
-                <div className="relative w-full h-64 mx-auto">
-                  <Image src={product.frontImageUrl} alt="Frente" fill className="rounded-lg object-contain" />
+              {frontPreview || product.frontImageUrl ? (
+                <div className="relative">
+                  <Image
+                    src={frontPreview || product.frontImageUrl!}
+                    alt="Frente"
+                    width={400}
+                    height={400}
+                    className="mx-auto rounded-lg object-contain max-h-96"
+                  />
                   <button
                     type="button"
                     onClick={() => removeImage("front")}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
+                  {uploadingFront && (
+                    <div className="mt-4">
+                      <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="bg-blue-600 h-full transition-all duration-300"
+                          style={{ width: `${progressFront}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{Math.round(progressFront)}%</p>
+                    </div>
+                  )}
+                  {product.frontImageUrl && !uploadingFront && (
+                    <p className="text-green-600 text-sm mt-2">Imagem enviada com sucesso!</p>
+                  )}
                 </div>
               ) : (
-                <label htmlFor="front-file-upload" className="cursor-pointer">
-                  <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">
-                    <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload</span> ou arraste
+                <label className="cursor-pointer">
+                  {uploadingFront ? <Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" /> : <Upload className="w-12 h-12 mx-auto text-gray-400" />}
+                  <p className="mt-2 text-sm text-gray-600">
+                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste aqui
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF ≤ 10MB</p>
                   <input
-                    id="front-file-upload"
                     type="file"
-                    accept="image/png, image/jpeg, image/gif"
-                    className="sr-only"
-                    onChange={e => handleImageUpload(e, "front")}
+                    accept="image/*"
+                    onChange={e => handleImageSelect(e, "front")}
+                    className="hidden"
                   />
                 </label>
               )}
@@ -288,40 +321,50 @@ const AddNewClothing: React.FC = () => {
 
           {/* Verso */}
           <div>
-            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-1">
-              Imagem do Verso <span className="text-gray-500 text-xs">(opcional)</span>
+            <label className="block text-sm font-[Poppins-light] text-gray-700 mb-2">
+              Imagem do Verso <span className="text-gray-500">(opcional)</span>
             </label>
             <div
               onDragOver={e => e.preventDefault()}
-              onDrop={e => handleImageUpload(e, "back")}
-              className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors ${
-                product.backImageUrl ? "border-gray-200" : "border-gray-300 hover:border-blue-400 cursor-pointer"
-              } font-[Poppins-light]`}
+              onDrop={e => handleImageSelect(e, "back")}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${backPreview || product.backImageUrl ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
             >
-              {product.backImageUrl ? (
-                <div className="relative w-full h-64 mx-auto">
-                  <Image src={product.backImageUrl} alt="Verso" fill className="rounded-lg object-contain" />
+              {backPreview || product.backImageUrl ? (
+                <div className="relative">
+                  <Image
+                    src={backPreview || product.backImageUrl!}
+                    alt="Verso"
+                    width={400}
+                    height={400}
+                    className="mx-auto rounded-lg object-contain max-h-96"
+                  />
                   <button
                     type="button"
                     onClick={() => removeImage("back")}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
+                  {uploadingBack && (
+                    <div className="mt-4">
+                      <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div className="bg-blue-600 h-full transition-all" style={{ width: `${progressBack}%` }} />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{Math.round(progressBack)}%</p>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <label htmlFor="back-file-upload" className="cursor-pointer">
-                  <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">
-                    <span className="font-[Poppins-light] text-blue-600 hover:text-blue-500">Upload</span> ou arraste
+                <label className="cursor-pointer">
+                  <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">
+                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF ≤ 10MB</p>
                   <input
-                    id="back-file-upload"
                     type="file"
-                    accept="image/png, image/jpeg, image/gif"
-                    className="sr-only"
-                    onChange={e => handleImageUpload(e, "back")}
+                    accept="image/*"
+                    onChange={e => handleImageSelect(e, "back")}
+                    className="hidden"
                   />
                 </label>
               )}
@@ -329,20 +372,17 @@ const AddNewClothing: React.FC = () => {
           </div>
         </div>
 
-        <div className="text-sm text-gray-600 mb-6 font-[Poppins-light]">
-          * Pelo menos a imagem da frente é obrigatória.
-        </div>
-
-        {/* BOTÃO */}
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading}
-            className={`px-6 py-3 bg-[#641311] text-white font-[Poppins-light] rounded-lg shadow-md transition ${
-              loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#54100e]"
-            }`}
+            disabled={loading || !product.frontImageUrl}
+            className={`px-8 py-3 bg-[#641311] text-white rounded-lg font-medium transition flex items-center gap-2 ${loading || !product.frontImageUrl ? "opacity-60 cursor-not-allowed" : "hover:bg-[#54100e]"}`}
           >
-            {loading ? "Salvando…" : "Salvar Vestido"}
+            {loading ? (
+              <>Salvando <Loader2 className="w-5 h-5 animate-spin" /></>
+            ) : (
+              "Salvar Vestido"
+            )}
           </button>
         </div>
       </form>
