@@ -205,7 +205,7 @@ const AddNewClothing: React.FC = () => {
               onChange={e => setProduct(p => ({ ...p, name: e.target.value }))}
               onBlur={e => setProduct(p => ({ ...p, name: formatInput(e.target.value) }))}
               required
-              className="w-full border-gray-300 rounded-lg p-2.5"
+              className="w-full border-2 border-gray-200 rounded-lg p-2.5 font-[Poppins-light] focus:border-[#641311] focus:outline-none transition-colors"
               placeholder="ex.: Vestido Floral"
             />
           </div>
@@ -216,7 +216,7 @@ const AddNewClothing: React.FC = () => {
               value={product.type}
               onChange={e => setProduct(p => ({ ...p, type: e.target.value }))}
               required
-              className="w-full border-gray-300 rounded-lg p-2.5"
+              className="w-full border-2 border-gray-200 rounded-lg p-2.5 font-[Poppins-light] focus:border-[#641311] focus:outline-none transition-colors"
             >
               {clothingTypes.map(o => (
                 <option key={o.value} value={o.value} disabled={!o.value}>
@@ -234,7 +234,7 @@ const AddNewClothing: React.FC = () => {
               onChange={e => setProduct(p => ({ ...p, color: e.target.value }))}
               onBlur={e => setProduct(p => ({ ...p, color: formatInput(e.target.value) }))}
               required
-              className="w-full border-gray-300 rounded-lg p-2.5"
+              className="w-full border-2 border-gray-200 rounded-lg p-2.5 font-[Poppins-light] focus:border-[#641311] focus:outline-none transition-colors"
               placeholder="ex.: Azul Marinho"
             />
           </div>
@@ -249,13 +249,13 @@ const AddNewClothing: React.FC = () => {
                 sizes: Array.from(e.target.selectedOptions, o => o.value)
               }))}
               required
-              className="w-full border-gray-300 rounded-lg p-2.5 h-40"
+              className="w-full border-2 border-gray-200 rounded-lg p-2.5 h-40 font-[Poppins-light] focus:border-[#641311] focus:outline-none transition-colors"
             >
               {sizes.map(s => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">Ctrl + clique para selecionar vários</p>
+            <p className="text-xs text-gray-500 mt-1 font-[Poppins-light]">Ctrl + clique para selecionar vários</p>
           </div>
         </div>
 
@@ -305,8 +305,8 @@ const AddNewClothing: React.FC = () => {
               ) : (
                 <label className="cursor-pointer">
                   {uploadingFront ? <Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" /> : <Upload className="w-12 h-12 mx-auto text-gray-400" />}
-                  <p className="mt-2 text-sm text-gray-600">
-                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste aqui
+                  <p className="mt-2 text-sm text-gray-600 font-[Poppins-light]">
+                    <span className="text-blue-600 font-medium font-[Poppins-light]">Clique para enviar</span> ou arraste aqui
                   </p>
                   <input
                     type="file"
@@ -336,12 +336,12 @@ const AddNewClothing: React.FC = () => {
                     alt="Verso"
                     width={400}
                     height={400}
-                    className="mx-auto rounded-lg object-contain max-h-96"
+                    className="mx-auto rounded-lg object-contain max-h-96 font-[Poppins-light]"
                   />
                   <button
                     type="button"
                     onClick={() => removeImage("back")}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 font-[Poppins-light]"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -357,8 +357,8 @@ const AddNewClothing: React.FC = () => {
               ) : (
                 <label className="cursor-pointer">
                   <Upload className="w-12 h-12 mx-auto text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-600">
-                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste
+                  <p className="mt-2 text-sm text-gray-600 font-[Poppins-light]">
+                    <span className="text-blue-600 font-medium font-[Poppins-light]">Clique para enviar</span> ou arraste
                   </p>
                   <input
                     type="file"
