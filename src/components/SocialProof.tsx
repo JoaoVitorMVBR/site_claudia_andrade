@@ -7,22 +7,22 @@ import { FaStar } from 'react-icons/fa';
 const SocialProof: React.FC = () => {
   const testimonials = [
     {
-      name: 'Ana Silva',
-      text: 'Alugar meu vestido no Ateliê Sofia foi uma experiência incrível! O atendimento foi impecável, e o vestido era simplesmente perfeito.',
+      name: 'Poliana Oliveira',
+      text: 'Excelente serviço e grande seleção de opções, com preços para atender todas as ocasiões!',
       rating: 5,
-      image: '/images/imgWoman.jpeg',
+      // image: '/images/imgWoman.jpeg',
     },
     {
-      name: 'Mariana Costa',
-      text: 'Os vestidos são de altíssima qualidade, e o processo de aluguel é super prático. Me senti uma verdadeira princesa no meu evento!',
+      name: 'Natalia Santana',
+      text: 'Várias opções de roupas, roupas bem conservadas. A saída impressiona com a qualidade dos itens. São pontuais com entregas e cuidadosas com o seu serviço.',
       rating: 5,
-      image: '/images/imgWoman.jpeg',
+      // image: '/images/imgWoman.jpeg',
     },
     {
-      name: 'Beatriz Lima',
-      text: 'Amei a exclusividade das peças e a atenção aos detalhes. Recomendo o Ateliê Sofia para qualquer ocasião especial!',
-      rating: 4,
-      image: '/images/imgWoman.jpeg',
+      name: 'Nayara Gonçalves',
+      text: 'O melhor lugar de aluguel de vestidos da cidade. Excelente serviço, atmosfera agradável, e vestidos maravilhosos.',
+      rating: 5,
+      // image: '/images/imgWoman.jpeg',
     },
   ];
 
@@ -39,13 +39,13 @@ const SocialProof: React.FC = () => {
               className="bg-white border border-[#cc936b] rounded-lg p-6 shadow-md text-center flex flex-col items-center"
             >
               <div className="relative w-16 h-16 mb-4">
-                <Image
+                {/* <Image
                   src={testimonial.image}
                   alt={testimonial.name}
                   fill
                   className="rounded-full object-cover"
                   quality={75}
-                />
+                /> */}
               </div>
               <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2">
                 {testimonial.name}

@@ -2,8 +2,51 @@
 // OU pages/api/clothing/create.ts   (Pages Router)
 
 import { NextRequest, NextResponse } from "next/server";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+// GET → verifica se já existe vestido com esse nome (exatamente o que você precisa)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const name = searchParams.get("name");
+
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
+  }
+
+  const normalizedName = name.trim();
+
+  try {
+    // Busca direta no Firestore (case-sensitive primeiro)
+    const q = query(
+      collection(db, "clothing"),
+      where("name", "==", normalizedName)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      return NextResponse.json({ exists: true });
+    }
+
+    // Caso não encontre, faz busca case-insensitive (manual)
+    const allDocs = await getDocs(collection(db, "clothing"));
+    const existsIgnoreCase = allDocs.docs.some(
+      doc => doc.data().name?.toString().toLowerCase() === normalizedName.toLowerCase()
+    );
+
+    return NextResponse.json({ exists: existsIgnoreCase });
+  } catch (error) {
+    console.error("Erro na verificação de nome:", error);
+    return NextResponse.json({ error: "Erro ao verificar nome" }, { status: 500 });
+  }
+}
 
 // POST /api/clothing/create
 export async function POST(request: NextRequest) {

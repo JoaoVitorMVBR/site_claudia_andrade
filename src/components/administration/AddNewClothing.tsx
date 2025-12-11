@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase"; // Seu arquivo firebase.ts já corrigido
+import { storage } from "@/lib/firebase";
 
 interface NewProduct {
   name: string;
@@ -25,10 +25,15 @@ const AddNewClothing: React.FC = () => {
     backImageUrl: null,
   });
 
-  // Preview local (apenas para exibir no formulário)
+  // Preview local
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
   const [backPreview, setBackPreview] = useState<string | null>(null);
 
+  // Arquivos selecionados (para subir só no submit)
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
+
+  // Estados de upload (usados só no submit)
   const [uploadingFront, setUploadingFront] = useState(false);
   const [uploadingBack, setUploadingBack] = useState(false);
   const [progressFront, setProgressFront] = useState(0);
@@ -42,12 +47,10 @@ const AddNewClothing: React.FC = () => {
     return value.trim().charAt(0).toUpperCase() + value.trim().slice(1).toLowerCase();
   };
 
-  // Upload de imagem direto pro Firebase Storage
   const uploadImage = async (file: File, type: "front" | "back"): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop() || "";
     const fileName = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
     const storageRef = ref(storage, `clothing/${fileName}`);
-
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     return new Promise((resolve, reject) => {
@@ -67,6 +70,7 @@ const AddNewClothing: React.FC = () => {
     });
   };
 
+  // Apenas preview + guarda o arquivo
   const handleImageSelect = (
     e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>,
     type: "front" | "back"
@@ -76,7 +80,7 @@ const AddNewClothing: React.FC = () => {
     if ("dataTransfer" in e) {
       file = e.dataTransfer.files[0];
       e.preventDefault();
-    } else if (e.target.files) {
+    } else if (e.target.files && e.target.files[0]) {
       file = e.target.files[0];
     }
 
@@ -87,44 +91,30 @@ const AddNewClothing: React.FC = () => {
       return;
     }
 
-    // Preview local
     const previewUrl = URL.createObjectURL(file);
-    if (type === "front") setFrontPreview(previewUrl);
-    if (type === "back") setBackPreview(previewUrl);
 
-    // Upload imediato para Firebase
-    if (type === "front") setUploadingFront(true);
-    if (type === "back") setUploadingBack(true);
+    if (type === "front") {
+      setFrontFile(file);
+      setFrontPreview(previewUrl);
+    } else {
+      setBackFile(file);
+      setBackPreview(previewUrl);
+    }
 
-    uploadImage(file, type)
-      .then((url) => {
-        setProduct(p => ({ ...p, [type === "front" ? "frontImageUrl" : "backImageUrl"]: url }));
-        setStatusMessage({ type: "success", message: `Imagem da ${type === "front" ? "frente" : "trás"} enviada com sucesso!` });
-      })
-      .catch((err) => {
-        console.error(err);
-        setStatusMessage({ type: "error", message: "Erro ao enviar imagem. Tente novamente." });
-        if (type === "front") setFrontPreview(null);
-        if (type === "back") setBackPreview(null);
-      })
-      .finally(() => {
-        if (type === "front") {
-          setUploadingFront(false);
-          setProgressFront(0);
-        }
-        if (type === "back") {
-          setUploadingBack(false);
-          setProgressBack(0);
-        }
-      });
+    setStatusMessage({
+      type: "success",
+      message: `Imagem da ${type === "front" ? "frente" : "trás"} selecionada. Será enviada ao salvar.`,
+    });
   };
 
   const removeImage = (type: "front" | "back") => {
     if (type === "front") {
       setFrontPreview(null);
+      setFrontFile(null);
       setProduct(p => ({ ...p, frontImageUrl: null }));
     } else {
       setBackPreview(null);
+      setBackFile(null);
       setProduct(p => ({ ...p, backImageUrl: null }));
     }
   };
@@ -135,23 +125,55 @@ const AddNewClothing: React.FC = () => {
     setLoading(true);
 
     try {
-      const finalProduct = {
+      const formattedProduct = {
         ...product,
         name: formatInput(product.name),
         color: formatInput(product.color),
       };
 
-      if (!finalProduct.name || !finalProduct.type || !finalProduct.color || finalProduct.sizes.length === 0) {
+      if (!formattedProduct.name || !formattedProduct.type || !formattedProduct.color || formattedProduct.sizes.length === 0) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
-      if (!finalProduct.frontImageUrl) {
+      if (!frontPreview) {
         throw new Error("A imagem da frente é obrigatória.");
       }
 
+      // 1. Verifica nome duplicado ANTES de qualquer upload
+      const checkRes = await fetch(`/api/clothing/create?name=${encodeURIComponent(formattedProduct.name)}`);
+      if (!checkRes.ok) {
+        const errData = await checkRes.json();
+        throw new Error(errData.error || "Erro ao verificar nome.");
+      }
+      const { exists } = await checkRes.json();
+      if (exists) {
+        throw new Error("Já existe um vestido com esse nome. Escolha outro.");
+      }
+
+      // 2. Só agora faz upload das imagens (se necessário)
+      let finalFrontUrl = product.frontImageUrl;
+      let finalBackUrl = product.backImageUrl;
+
+      if (frontFile) {
+        setUploadingFront(true);
+        finalFrontUrl = await uploadImage(frontFile, "front");
+        setProduct(p => ({ ...p, frontImageUrl: finalFrontUrl }));
+      }
+
+      if (backFile) {
+        setUploadingBack(true);
+        finalBackUrl = await uploadImage(backFile, "back");
+        setProduct(p => ({ ...p, backImageUrl: finalBackUrl }));
+      }
+
+      // 3. Salva no banco
       const res = await fetch("/api/clothing/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalProduct),
+        body: JSON.stringify({
+          ...formattedProduct,
+          frontImageUrl: finalFrontUrl,
+          backImageUrl: finalBackUrl || null,
+        }),
       });
 
       if (!res.ok) {
@@ -160,14 +182,22 @@ const AddNewClothing: React.FC = () => {
       }
 
       setStatusMessage({ type: "success", message: "Vestido salvo com sucesso!" });
+
+      // Reset completo
       setProduct({ name: "", type: "", color: "", sizes: [], frontImageUrl: null, backImageUrl: null });
       setFrontPreview(null);
       setBackPreview(null);
+      setFrontFile(null);
+      setBackFile(null);
+      setProgressFront(0);
+      setProgressBack(0);
 
     } catch (err: any) {
       setStatusMessage({ type: "error", message: err.message || "Erro ao salvar." });
     } finally {
       setLoading(false);
+      setUploadingFront(false);
+      setUploadingBack(false);
     }
   };
 
@@ -176,11 +206,12 @@ const AddNewClothing: React.FC = () => {
     { value: "Detalhes bordados", label: "Detalhes bordados" },
     { value: "Todo bordado", label: "Todo bordado" },
     { value: "Liso", label: "Liso" },
+    { value: "Gliterizado", label: "Gliterizado" },
+    { value: "Micro paetê", label: "Micro paetê" },
+    { value: "Meio corpo bordado", label: "Meio corpo bordado" },
   ];
 
-  const sizes = [
-    "34", "36", "38", "40", "42", "44", "46", "48", "50"
-  ].map(s => ({ value: s, label: s }));
+  const sizes = ["34", "36", "38", "40", "42", "44", "46", "48", "50"].map(s => ({ value: s, label: s }));
 
   return (
     <div className="flex-1 p-4 md:p-8 min-h-screen bg-gray-50">
@@ -269,12 +300,12 @@ const AddNewClothing: React.FC = () => {
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageSelect(e, "front")}
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${frontPreview || product.frontImageUrl ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${frontPreview ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
             >
-              {frontPreview || product.frontImageUrl ? (
+              {frontPreview ? (
                 <div className="relative">
                   <Image
-                    src={frontPreview || product.frontImageUrl!}
+                    src={frontPreview}
                     alt="Frente"
                     width={400}
                     height={400}
@@ -290,23 +321,17 @@ const AddNewClothing: React.FC = () => {
                   {uploadingFront && (
                     <div className="mt-4">
                       <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
-                        <div
-                          className="bg-blue-600 h-full transition-all duration-300"
-                          style={{ width: `${progressFront}%` }}
-                        />
+                        <div className="bg-blue-600 h-full transition-all duration-300" style={{ width: `${progressFront}%` }} />
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{Math.round(progressFront)}%</p>
                     </div>
                   )}
-                  {product.frontImageUrl && !uploadingFront && (
-                    <p className="text-green-600 text-sm mt-2">Imagem enviada com sucesso!</p>
-                  )}
                 </div>
               ) : (
                 <label className="cursor-pointer">
-                  {uploadingFront ? <Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" /> : <Upload className="w-12 h-12 mx-auto text-gray-400" />}
+                  <Upload className="w-12 h-12 mx-auto text-gray-400" />
                   <p className="mt-2 text-sm text-gray-600 font-[Poppins-light]">
-                    <span className="text-blue-600 font-medium font-[Poppins-light]">Clique para enviar</span> ou arraste aqui
+                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste aqui
                   </p>
                   <input
                     type="file"
@@ -327,21 +352,21 @@ const AddNewClothing: React.FC = () => {
             <div
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleImageSelect(e, "back")}
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${backPreview || product.backImageUrl ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${backPreview ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"}`}
             >
-              {backPreview || product.backImageUrl ? (
+              {backPreview ? (
                 <div className="relative">
                   <Image
-                    src={backPreview || product.backImageUrl!}
+                    src={backPreview}
                     alt="Verso"
                     width={400}
                     height={400}
-                    className="mx-auto rounded-lg object-contain max-h-96 font-[Poppins-light]"
+                    className="mx-auto rounded-lg object-contain max-h-96"
                   />
                   <button
                     type="button"
                     onClick={() => removeImage("back")}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 font-[Poppins-light]"
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -358,7 +383,7 @@ const AddNewClothing: React.FC = () => {
                 <label className="cursor-pointer">
                   <Upload className="w-12 h-12 mx-auto text-gray-400" />
                   <p className="mt-2 text-sm text-gray-600 font-[Poppins-light]">
-                    <span className="text-blue-600 font-medium font-[Poppins-light]">Clique para enviar</span> ou arraste
+                    <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste
                   </p>
                   <input
                     type="file"
@@ -375,8 +400,10 @@ const AddNewClothing: React.FC = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading || !product.frontImageUrl}
-            className={`px-8 py-3 bg-[#641311] text-white rounded-lg font-medium transition flex items-center gap-2 ${loading || !product.frontImageUrl ? "opacity-60 cursor-not-allowed" : "hover:bg-[#54100e]"}`}
+            disabled={loading || !frontPreview}
+            className={`px-8 py-3 bg-[#641311] text-white rounded-lg font-medium transition flex items-center gap-2 ${
+              loading || !frontPreview ? "opacity-60 cursor-not-allowed" : "hover:bg-[#54100e]"
+            }`}
           >
             {loading ? (
               <>Salvando <Loader2 className="w-5 h-5 animate-spin" /></>
