@@ -81,6 +81,9 @@ export default function ClothingForm({ initialData, onSubmit, submitLabel, isEdi
     { value: "Detalhes bordados", label: "Detalhes bordados" },
     { value: "Todo bordado", label: "Todo bordado" },
     { value: "Liso", label: "Liso" },
+    { value: "Gliterizado", label: "Gliterizado" },
+    { value: "Micro paetê", label: "Micro paetê" },
+    { value: "Meio corpo bordado", label: "Meio corpo bordado" },
   ];
 
   const sizes = [
