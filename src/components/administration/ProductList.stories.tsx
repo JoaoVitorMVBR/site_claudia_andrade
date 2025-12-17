@@ -1,21 +1,14 @@
-import React from 'react';
-import { Meta, StoryObj } from '@storybook/react';
-import Sidebar from './Sidebar'; // Adjust path as needed
-import ProductList from './ProductList';
+import type { Meta, StoryObj } from '@storybook/react';
 
-const meta: Meta<typeof ProductList> = {
-  title: 'Components/ProductList',
-  component: ProductList,
+const meta: Meta = {
+  title: 'Administration/ProductList',
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
-  tags: ['autodocs'],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof ProductList>;
-
-export const Default: Story = {
-  args: {},
+export const Default = {
+  render: () => <div>ProductList component - requires API setup</div>,
 };

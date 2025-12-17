@@ -1,20 +1,14 @@
-import React from 'react';
-import { Meta, StoryObj } from '@storybook/react';
-import AddNewClothing from './AddNewClothing';
+import type { Meta, StoryObj } from '@storybook/react';
 
-const meta: Meta<typeof AddNewClothing> = {
-  title: 'Components/AddNewClothing',
-  component: AddNewClothing,
+const meta: Meta = {
+  title: 'Administration/AddNewClothing',
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
-  tags: ['autodocs'],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof AddNewClothing>;
-
-export const Default: Story = {
-  args: {},
+export const Default = {
+  render: () => <div>AddNewClothing component - requires Firebase setup</div>,
 };

@@ -1,20 +1,14 @@
-import React from 'react';
-import { Meta, StoryObj } from '@storybook/react';
-import Sidebar from './Sidebar'; // Adjust path as needed
+import type { Meta, StoryObj } from '@storybook/react';
 
-const meta: Meta<typeof Sidebar> = {
-  title: 'Components/Sidebar',
-  component: Sidebar,
+const meta: Meta = {
+  title: 'Administration/Sidebar',
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
-  tags: ['autodocs'],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Sidebar>;
-
-export const Default: Story = {
-  args: {},
+export const Default = {
+  render: () => <div>Sidebar component - requires Next.js router</div>,
 };
