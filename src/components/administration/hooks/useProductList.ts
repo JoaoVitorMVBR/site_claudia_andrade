@@ -1,55 +1,24 @@
-import { useState, useEffect, useCallback } from "react";
-import { Product } from "@/types/products";
-import { clothingService } from "../services/clothingService";
+import { useState } from "react";
+import { useProducts } from "@/shared/hooks/useProducts";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import { clothingService } from "../services/clothingService";
 
 export const useProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentSearch, setCurrentSearch] = useState("");
-
-  const fetchProducts = useCallback(
-    async (cursor: string | null = null, append = false) => {
-      if (!append) setLoading(true);
-      else setLoadingMore(true);
-
-      try {
-        const data = await clothingService.fetchProducts(cursor, currentSearch);
-        const items: Product[] = Array.isArray(data.items) ? data.items : [];
-
-        if (append) {
-          setProducts((prev) => [...prev, ...items]);
-        } else {
-          setProducts(items);
-        }
-
-        setNextCursor(data.nextCursor || null);
-        setHasMore(!!data.nextCursor);
-      } catch (error) {
-        console.error(error);
-        setProducts([]);
-        alert("Erro ao carregar vestidos.");
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [currentSearch]
-  );
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  
+  const {
+    products,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore: baseLoadMore,
+    refresh,
+  } = useProducts({ search: currentSearch });
 
   const handleSearch = () => {
     setCurrentSearch(searchTerm.trim());
-    setNextCursor(null);
-    setProducts([]);
   };
 
   const clearSearch = () => {
@@ -58,9 +27,7 @@ export const useProductList = () => {
   };
 
   const loadMore = () => {
-    if (nextCursor && !loadingMore) {
-      fetchProducts(nextCursor, true);
-    }
+    baseLoadMore();
   };
 
   const toggleDestaque = async (productId: string, currentValue: boolean) => {
@@ -72,9 +39,7 @@ export const useProductList = () => {
 
     try {
       await updateDoc(doc(db, "clothing", productId), { destaque: !currentValue });
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, destaque: !currentValue } : p))
-      );
+      refresh(); // Recarrega a lista
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar destaque.");
@@ -86,7 +51,7 @@ export const useProductList = () => {
 
     try {
       await clothingService.delete(productId);
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      refresh(); // Recarrega a lista
       alert("Removido com sucesso!");
     } catch (err: any) {
       console.error("Erro no fetch:", err);

@@ -15,9 +15,9 @@ const Navbar: React.FC = () => {
   const navItems: NavItem[] = [
     { name: 'Home', href: '/' },
     { name: 'Vestidos', href: '/produtos' },
-    { name: 'Contato', href: '/contato' },
+    // { name: 'Contato', href: '/contato' },
     { name: 'Sobre Nós', href: '/sobre' },
-    { name: 'Painel', href: '/adm/produtos' },
+    // { name: 'Painel', href: '/adm/produtos' },
   ]
 
   const LinkWrapper = ({

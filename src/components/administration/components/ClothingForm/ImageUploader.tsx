@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Upload, X } from "lucide-react";
+import { validateFile } from "@/shared/utils/uploadUtils";
 
 interface ImageUploaderProps {
   type: "front" | "back";
@@ -10,6 +11,7 @@ interface ImageUploaderProps {
   uploading?: boolean;
   progress?: number;
   required?: boolean;
+  onError?: (message: string) => void;
 }
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -20,8 +22,30 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   uploading = false,
   progress = 0,
   required = false,
+  onError,
 }) => {
   const label = type === "front" ? "Frente" : "Verso";
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
+    let file: File | null = null;
+
+    if ("dataTransfer" in e) {
+      file = e.dataTransfer.files[0];
+      e.preventDefault();
+    } else if (e.target.files && e.target.files[0]) {
+      file = e.target.files[0];
+    }
+
+    if (file) {
+      const validation = validateFile(file);
+      if (validation) {
+        onError?.(validation);
+        return;
+      }
+    }
+
+    onSelect(e, type);
+  };
 
   return (
     <div>
@@ -31,7 +55,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       </label>
       <div
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => onSelect(e, type)}
+        onDrop={handleFileSelect}
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
           preview ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-blue-400"
         }`}
@@ -70,10 +94,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             <p className="mt-2 text-sm text-gray-600 font-[Poppins-light]">
               <span className="text-blue-600 font-medium">Clique para enviar</span> ou arraste aqui
             </p>
+            <p className="text-xs text-gray-500 mt-1">JPG, PNG, WebP • Máx. 20MB</p>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => onSelect(e, type)}
+              onChange={handleFileSelect}
               className="hidden"
             />
           </label>

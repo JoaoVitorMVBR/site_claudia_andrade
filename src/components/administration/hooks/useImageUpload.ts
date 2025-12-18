@@ -1,35 +1,11 @@
 import { useState } from "react";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
+import { uploadFile, generateFileName } from "@/shared/utils/uploadUtils";
 
 export const useImageUpload = () => {
   const [uploadingFront, setUploadingFront] = useState(false);
   const [uploadingBack, setUploadingBack] = useState(false);
   const [progressFront, setProgressFront] = useState(0);
   const [progressBack, setProgressBack] = useState(0);
-
-  const uploadImage = async (file: File, type: "front" | "back"): Promise<string> => {
-    const fileExt = file.name.split(".").pop() || "";
-    const fileName = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-    const storageRef = ref(storage, `clothing/${fileName}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          if (type === "front") setProgressFront(progress);
-          if (type === "back") setProgressBack(progress);
-        },
-        (error) => reject(error),
-        async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(url);
-        }
-      );
-    });
-  };
 
   const uploadImages = async (
     frontFile: File | null,
@@ -40,8 +16,11 @@ export const useImageUpload = () => {
 
     if (frontFile) {
       setUploadingFront(true);
+      setProgressFront(0);
       try {
-        frontUrl = await uploadImage(frontFile, "front");
+        const fileName = generateFileName(frontFile.name, "front");
+        const result = await uploadFile(frontFile, fileName, setProgressFront);
+        frontUrl = result.url;
       } finally {
         setUploadingFront(false);
       }
@@ -49,8 +28,11 @@ export const useImageUpload = () => {
 
     if (backFile) {
       setUploadingBack(true);
+      setProgressBack(0);
       try {
-        backUrl = await uploadImage(backFile, "back");
+        const fileName = generateFileName(backFile.name, "back");
+        const result = await uploadFile(backFile, fileName, setProgressBack);
+        backUrl = result.url;
       } finally {
         setUploadingBack(false);
       }
