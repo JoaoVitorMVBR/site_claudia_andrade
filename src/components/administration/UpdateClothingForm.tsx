@@ -87,6 +87,7 @@ export default function ClothingForm({ initialData, onSubmit, submitLabel, isEdi
     { value: "Curto liso", label: "Curto liso" },
     { value: "Curto bordado", label: "Curto bordado" },
     { value: "Midi", label: "Midi" },
+    { value: "Debutante", label: "Debutante" },
   ];
 
   const sizes = [

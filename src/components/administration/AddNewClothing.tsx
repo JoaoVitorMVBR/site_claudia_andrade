@@ -212,7 +212,7 @@ const AddNewClothing: React.FC = () => {
     { value: "Curto liso", label: "Curto liso" },
     { value: "Curto bordado", label: "Curto bordado" },
     { value: "Midi", label: "Midi" },
-
+    { value: "Debutante", label: "Debutante" },
   ];
 
   const sizes = ["34", "36", "38", "40", "42", "44", "46", "48", "50"].map(s => ({ value: s, label: s }));
