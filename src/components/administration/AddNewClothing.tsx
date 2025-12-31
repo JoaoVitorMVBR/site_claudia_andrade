@@ -209,6 +209,10 @@ const AddNewClothing: React.FC = () => {
     { value: "Gliterizado", label: "Gliterizado" },
     { value: "Micro paetê", label: "Micro paetê" },
     { value: "Meio corpo bordado", label: "Meio corpo bordado" },
+    { value: "Curto liso", label: "Curto liso" },
+    { value: "Curto bordado", label: "Curto bordado" },
+    { value: "Midi", label: "Midi" },
+
   ];
 
   const sizes = ["34", "36", "38", "40", "42", "44", "46", "48", "50"].map(s => ({ value: s, label: s }));
