@@ -56,7 +56,7 @@ const SocialProof: React.FC = () => {
                     key={starIndex}
                     className={
                       starIndex < testimonial.rating
-                        ? 'text-[#cc936b]'
+                        ? 'text-[#000000]'
                         : 'text-gray-300'
                     }
                   />

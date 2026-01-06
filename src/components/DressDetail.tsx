@@ -124,7 +124,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                   e.stopPropagation();
                   openZoom(currentImageUrl);
                 }}
-                className="absolute top-4 right-4 bg-[#641311] text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md hover:bg-[#cc936b] hidden sm:block"
+                className="absolute top-4 right-4 bg-[#ffffff] text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md hover:bg-[#cc936b] hidden sm:block"
                 aria-label="Ampliar imagem"
               >
                 <FaSearchPlus className="w-5 h-5" />
@@ -222,7 +222,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                     dress.sizes.map((size, index) => (
                       <span
                         key={index}
-                        className="inline-block bg-[#641311] text-white text-lg px-5 py-2 rounded-full font-[Poppins-light] shadow-sm"
+                        className="inline-block bg-[#ffffff] text-white text-lg px-5 py-2 rounded-full font-[Poppins-light] shadow-sm"
                       >
                         {size}
                       </span>
@@ -244,7 +244,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
 
             <button
               onClick={handleWhatsAppShare}
-              className="bg-[#641311] text-white py-4 px-8 rounded-lg hover:bg-[#cc936b] transition-all duration-300 font-[Poppins-light] text-xl shadow-lg hover:shadow-xl transform hover:scale-105 mt-6 flex items-center justify-center gap-3"
+              className="bg-[#ffffff] text-white py-4 px-8 rounded-lg hover:bg-[#cc936b] transition-all duration-300 font-[Poppins-light] text-xl shadow-lg hover:shadow-xl transform hover:scale-105 mt-6 flex items-center justify-center gap-3"
             >
               <FaWhatsapp className="w-6 h-6" />
               Fazer orçamento
@@ -260,7 +260,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
           >
             <button
               onClick={closeZoom}
-              className="absolute top-6 right-6 text-white text-4xl hover:text-[#cc936b] transition z-10"
+              className="absolute top-6 right-6 text-white text-4xl hover:text-[#000000] transition z-10"
               aria-label="Fechar zoom"
             >
               <FaTimes />

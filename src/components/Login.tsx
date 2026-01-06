@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
           )}
           <button
             type="submit"
-            className="font-[Poppins-light] w-full bg-[#641311] text-white py-2 px-4 rounded-md hover:bg-[#cc936b] transition-colors duration-300"
+            className="font-[Poppins-light] w-full bg-[#ffffff] text-white py-2 px-4 rounded-md hover:bg-[#cc936b] transition-colors duration-300"
           >
             Entrar
           </button>

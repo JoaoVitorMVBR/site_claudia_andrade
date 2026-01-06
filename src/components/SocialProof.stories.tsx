@@ -73,7 +73,7 @@ export const SingleTestimonial: Story = {
                         key={starIndex}
                         className={
                           starIndex < testimonial.rating
-                            ? 'text-[#cc936b] w-5 h-5'
+                            ? 'text-[#000000] w-5 h-5'
                             : 'text-gray-300 w-5 h-5'
                         }
                         fill="currentColor"
@@ -161,7 +161,7 @@ export const LongText: Story = {
                         key={starIndex}
                         className={
                           starIndex < testimonial.rating
-                            ? 'text-[#cc936b] w-5 h-5'
+                            ? 'text-[#000000] w-5 h-5'
                             : 'text-gray-300 w-5 h-5'
                         }
                         fill="currentColor"

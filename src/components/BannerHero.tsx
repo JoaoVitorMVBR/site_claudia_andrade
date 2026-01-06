@@ -18,20 +18,7 @@ const BannerHero: React.FC = () => {
       />
 
       {/* Overlay para contraste */}
-      <div className="absolute inset-0 bg-[#641311]/40" />
-
-      {/* Conteúdo */}
-      <div className="relative z-10 text-center text-white px-4">
-        <h1 className="font-moondance text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-[#cc936b] mb-4 tracking-wide">
-          Vestidos Finos
-        </h1>
-        <Link
-          href="/produtos"
-          className="inline-block bg-[#cc936b] text-[#641311] font-[Poppins-light] text-xs md:text-sm py-3 px-6 rounded-md hover:bg-[#cc936b]/80 transition-colors duration-300"
-        >
-          Ver Coleção
-        </Link>
-      </div>
+      <div className="absolute inset-0 bg-[#ffffff]/30" />
     </section>
   )
 }

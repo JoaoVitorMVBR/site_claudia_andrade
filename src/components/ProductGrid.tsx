@@ -123,7 +123,7 @@ const ProductGrid: React.FC = () => {
     return (
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#cc936b]" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#000000]" />
           <p className="mt-2 text-gray-600">Carregando vestidos...</p>
         </div>
       </section>
@@ -182,10 +182,10 @@ const ProductGrid: React.FC = () => {
                       />
                     </div>
                     <div className="p-4 text-center">
-                      <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2 group-hover:text-[#cc936b] transition-colors duration-300">
+                      <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2 group-hover:text-[#000000] transition-colors duration-300">
                         {product.name}
                       </h3>
-                      <p className="font-[Poppins-light] text-lg text-[#cc936b]">
+                      <p className="font-[Poppins-light] text-lg text-[#000000]">
                         {product.type} • {product.color}
                       </p>
                     </div>
@@ -198,7 +198,7 @@ const ProductGrid: React.FC = () => {
             {hasMore && (
               <div id="sentinel" className="mt-12 text-center">
                 {loadingMore ? (
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#cc936b]" />
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#000000]" />
                 ) : (
                   <button
                     onClick={loadMore}
