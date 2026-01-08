@@ -65,7 +65,7 @@ const FAQSection: React.FC = () => {
                 <span className="font-[Poppins-light] text-[#641311] font-semibold text-sm sm:text-base">
                   {item.question}
                 </span>
-                <span className="text-[#cc936b] text-lg sm:text-xl">
+                <span className="text-[#000000] text-lg sm:text-xl">
                   {openIndex === index ? '-' : '+'}
                 </span>
               </button>
