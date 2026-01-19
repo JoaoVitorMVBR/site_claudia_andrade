@@ -38,14 +38,14 @@ const Navbar: React.FC = () => {
   }
 
   return (
-    <nav className="bg-[#ffffff] text-white fixed w-full z-20 top-0 shadow-lg transition-all duration-300">
+    <nav className="bg-[#E7DED0] text-white fixed w-full z-20 top-0 shadow-lg transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Mobile menu button */}
           <div className="flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-full text-[#000000] hover:text-white hover:bg-[#cc936b]/10 focus:outline-none transition-colors duration-200"
+              className="p-2 rounded-full text-[#82614A] hover:text-white hover:bg-[#cc936b]/10 focus:outline-none transition-colors duration-200"
               aria-label="Toggle menu"
             >
               <span className="sr-only">Abrir menu</span>
@@ -85,7 +85,7 @@ const Navbar: React.FC = () => {
           <div className="flex-1 flex justify-center md:flex-initial">
             <LinkWrapper
               href="/"
-              className="font-moondance text-3xl sm:text-4xl md:text-5xl text-[#000000] tracking-wide hover:text-[#000000]/80 transition-colors duration-300 whitespace-nowrap"
+              className="font-moondance text-3xl sm:text-4xl md:text-5xl text-[#82614A] tracking-wide hover:text-[#82614A]/80 transition-colors duration-300 whitespace-nowrap"
             >
               Cláudia Andrade
             </LinkWrapper>
@@ -97,7 +97,7 @@ const Navbar: React.FC = () => {
               <LinkWrapper
                 key={item.name}
                 href={item.href}
-                className="font-[Poppins-light] text-[#000000] text-base md:text-sm relative group hover:text-black transition-colors duration-200"
+                className="font-[Poppins-light] text-[#82614A] text-base md:text-sm relative group hover:text-black transition-colors duration-200"
               >
                 {item.name}
                 <span className="absolute -bottom-2 left-0 w-0 h-px bg-[#000000] group-hover:w-full transition-all duration-300 ease-in-out" />
@@ -111,13 +111,13 @@ const Navbar: React.FC = () => {
 
         {/* Mobile menu */}
         {isOpen && (
-          <div className="md:hidden absolute w-full left-0 top-20 bg-[#ffffff] shadow-lg animate-slideDown">
+          <div className="md:hidden absolute w-full left-0 top-20 bg-[#E7DED0] shadow-lg animate-slideDown">
             <div className="px-4 pt-4 pb-6 space-y-4">
               {navItems.map((item) => (
                 <LinkWrapper
                   key={item.name}
                   href={item.href}
-                  className="font-[Poppins-light] block px-4 py-2 text-[#000000] hover:text-white hover:bg-[#000000]/10 text-xl sm:text-2xl rounded-md transition-colors duration-200"
+                  className="font-[Poppins-light] block px-4 py-2 text-[#82614A] hover:text-white hover:bg-[#000000]/10 text-xl sm:text-2xl rounded-md transition-colors duration-200"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
