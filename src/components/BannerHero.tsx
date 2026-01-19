@@ -33,7 +33,7 @@ const BannerHero: React.FC = () => {
       </video>
 
       {/* Overlay para contraste - continua igual */}
-      <div className="absolute inset-0 bg-white/30" />
+      <div className="absolute inset-0" />
     </section>
   )
 }
