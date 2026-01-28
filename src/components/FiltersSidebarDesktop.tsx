@@ -56,7 +56,7 @@ const DesktopFilters: React.FC<DesktopFiltersProps> = ({
     <div className="border-b border-gray-200 last:border-b-0 pb-6 mb-6">
       <button
         onClick={() => toggleSection(category)}
-        className="w-full flex items-center justify-between text-gray-800 font-[Poppins-light] text-lg hover:text-[#641311] transition-colors duration-200 py-2"
+        className="w-full flex items-center justify-between text-gray-800 font-[Poppins-light] text-lg hover:text-[#000000] transition-colors duration-200 py-2"
       >
         {title}
         {openSections[category] ? (
@@ -76,7 +76,7 @@ const DesktopFilters: React.FC<DesktopFiltersProps> = ({
                 type="checkbox"
                 checked={selectedFilters[category].includes(option.value)}
                 onChange={() => handleCheckboxChange(category, option.value)}
-                className="w-4 h-4 text-[#641311] rounded focus:ring-[#641311] accent-[#641311]"
+                className="w-4 h-4 text-[#000000] rounded focus:ring-[#000000] accent-[#000000]"
               />
               <span className="text-gray-700 group-hover:text-gray-900 font-[Poppins-light] transition-colors duration-200">
                 {option.label}
@@ -93,7 +93,7 @@ const DesktopFilters: React.FC<DesktopFiltersProps> = ({
       <div className="bg-white rounded-lg shadow-md p-6 sticky top-8 overflow-y-auto max-h-[calc(100vh-4rem)]">
         {/* Adicionado overflow-y-auto e max-h para permitir rolagem */}
         {/* max-h: calcula a altura máxima como 100vh - 4rem (ajuste o 4rem conforme o header/footer do seu site) */}
-        <h2 className="text-2xl font-moondance text-[#641311] mb-8">
+        <h2 className="text-2xl font-moondance text-[#000000] mb-8">
           Filtros
         </h2>
 

@@ -85,7 +85,7 @@ const Navbar: React.FC = () => {
           <div className="flex-1 flex justify-center md:flex-initial">
             <LinkWrapper
               href="/"
-              className="font-moondance text-3xl sm:text-4xl md:text-5xl text-[#82614A] tracking-wide hover:text-[#82614A]/80 transition-colors duration-300 whitespace-nowrap"
+              className="font-moondance text-3xl sm:text-4xl md:text-5xl text-[#82614A] tracking-wide transition-colors duration-300 whitespace-nowrap"
             >
               Cláudia Andrade
             </LinkWrapper>
