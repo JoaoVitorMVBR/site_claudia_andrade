@@ -45,21 +45,21 @@ const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <FaInstagram className="text-[#82614A] text-2xl hover:text-white transition-colors duration-300" />
+                <FaInstagram className="text-[#82614A] text-2xl hover:text-black transition-colors duration-300" />
               </Link>
               {/* <Link
                 href="https://facebook.com/seuperfil"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <FaFacebook className="text-[#82614A] text-2xl hover:text-white transition-colors duration-300" />
+                <FaFacebook className="text-[#82614A] text-2xl hover:text-black transition-colors duration-300" />
               </Link> */}
               <Link
                 href="https://wa.me/message/SGCAIYHEWCALP1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <FaWhatsapp className="text-[#82614A] text-2xl hover:text-white transition-colors duration-300" />
+                <FaWhatsapp className="text-[#82614A] text-2xl hover:text-black transition-colors duration-300" />
               </Link>
             </div>
           </div>

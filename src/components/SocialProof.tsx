@@ -29,14 +29,14 @@ const SocialProof: React.FC = () => {
   return (
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8 tracking-wide">
+        <h2 className="font-[Poppins-light] text-3xl text-[#000000] text-center mb-8 tracking-wide">
           O que Nossas Clientes Dizem
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white border border-[#cc936b] rounded-lg p-6 shadow-md text-center flex flex-col items-center"
+              className="bg-white border border-[#82614A] rounded-lg p-6 shadow-md text-center flex flex-col items-center"
             >
               <div className="relative w-16 h-16 mb-4">
                 {/* <Image
@@ -47,7 +47,7 @@ const SocialProof: React.FC = () => {
                   quality={75}
                 /> */}
               </div>
-              <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2">
+              <h3 className="font-[Poppins-light] text-xl text-[#000000] mb-2">
                 {testimonial.name}
               </h3>
               <div className="flex mb-2">

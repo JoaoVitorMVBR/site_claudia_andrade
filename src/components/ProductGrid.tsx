@@ -133,7 +133,7 @@ const ProductGrid: React.FC = () => {
   return (
     <section className="py-12 bg-[#FFFFFF] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-[Poppins-light] text-3xl md:text-4xl text-[#641311] text-center mb-12 tracking-wide">
+        <h2 className="font-[Poppins-light] text-3xl md:text-4xl text-[#000000] text-center mb-12 tracking-wide">
           Nossos Vestidos
         </h2>
 
@@ -182,7 +182,7 @@ const ProductGrid: React.FC = () => {
                       />
                     </div>
                     <div className="p-4 text-center">
-                      <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2 group-hover:text-[#000000] transition-colors duration-300">
+                      <h3 className="font-[Poppins-light] text-xl text-[#000000] mb-2 group-hover:text-[#000000] transition-colors duration-300">
                         {product.name}
                       </h3>
                       <p className="font-[Poppins-light] text-lg text-[#000000]">

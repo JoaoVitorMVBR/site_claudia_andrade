@@ -87,7 +87,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
   return (
     <section className="py-12 bg-[#FFFFFF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-[Poppins-light] text-4xl md:text-5xl text-[#641311] text-center mb-10 tracking-wide">
+        <h2 className="font-[Poppins-light] text-4xl md:text-5xl text-[#000000] text-center mb-10 tracking-wide">
           {dress.name}
         </h2>
 
@@ -136,7 +136,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                   e.stopPropagation();
                   switchImage('left');
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#641311] p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#000000] p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10"
                 aria-label="Imagem anterior"
               >
                 <FaChevronLeft className="w-5 h-5" />
@@ -147,7 +147,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                   e.stopPropagation();
                   switchImage('right');
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#641311] p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 text-[#000000] p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200 z-10"
                 aria-label="Próxima imagem"
               >
                 <FaChevronRight className="w-5 h-5" />
@@ -174,7 +174,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                 onClick={() => setCurrentImage('front')}
                 className={`relative w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                   currentImage === 'front'
-                    ? 'border-[#641311] shadow-md scale-105'
+                    ? 'border-[#000000] shadow-md scale-105'
                     : 'border-gray-300 hover:border-[#cc936b]'
                 }`}
               >
@@ -189,7 +189,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                 onClick={() => setCurrentImage('back')}
                 className={`relative w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                   currentImage === 'back'
-                    ? 'border-[#641311] shadow-md scale-105'
+                    ? 'border-[#000000] shadow-md scale-105'
                     : 'border-gray-300 hover:border-[#cc936b]'
                 }`}
               >
@@ -207,14 +207,14 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
           <div className="flex flex-col justify-center space-y-6 text-center lg:text-left">
             <div className="space-y-4">
               <p className="font-[Poppins-light] text-2xl text-gray-800">
-                <strong className="text-[#641311]">Tipo:</strong> {dress.type}
+                <strong className="text-[#000000]">Tipo:</strong> {dress.type}
               </p>
               <p className="font-[Poppins-light] text-2xl text-gray-800">
-                <strong className="text-[#641311]">Cor:</strong> {dress.color}
+                <strong className="text-[#000000]">Cor:</strong> {dress.color}
               </p>
 
               <div>
-                <p className="font-[Poppins-light] text-2xl text-[#641311] mb-3">
+                <p className="font-[Poppins-light] text-2xl text-[#000000] mb-3">
                   <strong>Tamanhos disponíveis:</strong>
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
@@ -222,7 +222,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
                     dress.sizes.map((size, index) => (
                       <span
                         key={index}
-                        className="inline-block bg-[#ffffff] text-white text-lg px-5 py-2 rounded-full font-[Poppins-light] shadow-sm"
+                        className="inline-block bg-[#ffffff] text-black text-lg px-5 py-2 rounded-full font-[Poppins-light] shadow-sm"
                       >
                         {size}
                       </span>
@@ -244,7 +244,7 @@ const DressDetail: React.FC<{ dress: Product }> = ({ dress }) => {
 
             <button
               onClick={handleWhatsAppShare}
-              className="bg-[#ffffff] text-white py-4 px-8 rounded-lg hover:bg-[#cc936b] transition-all duration-300 font-[Poppins-light] text-xl shadow-lg hover:shadow-xl transform hover:scale-105 mt-6 flex items-center justify-center gap-3"
+              className="bg-[#82614A] text-white py-4 px-8 rounded-lg transition-all duration-300 font-[Poppins-light] text-xl shadow-lg hover:shadow-xl transform hover:scale-105 mt-6 flex items-center justify-center gap-3"
             >
               <FaWhatsapp className="w-6 h-6" />
               Fazer orçamento
