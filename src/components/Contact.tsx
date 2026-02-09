@@ -94,7 +94,7 @@ const Contact: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="font-[Poppins-light] w-full bg-[#641311] text-white py-2 rounded-md hover:bg-[#cc936b] transition-colors duration-300 text-sm sm:text-base"
+                  className="font-[Poppins-light] w-full bg-[#ffffff] text-white py-2 rounded-md hover:bg-[#cc936b] transition-colors duration-300 text-sm sm:text-base"
                 >
                   Enviar
                 </button>

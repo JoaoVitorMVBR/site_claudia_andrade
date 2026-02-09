@@ -46,7 +46,7 @@ const FAQSection: React.FC = () => {
     <section className="bg-white min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full">
       <div className="w-full mx-auto">
         {/* Título */}
-        <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8">
+        <h2 className="font-[Poppins-light] text-3xl text-[#000000] text-center mb-8">
           Perguntas Frequentes
         </h2>
 
@@ -55,25 +55,25 @@ const FAQSection: React.FC = () => {
         {faqData.map((item: FAQItem, index: number) => (
             <div 
               key={index} 
-              className="border border-[#cc936b] rounded-lg overflow-hidden w-full"
+              className="border border-[#82614A] rounded-lg overflow-hidden w-full"
             >
               {/* Pergunta - Botão clicável */}
               <button
                 onClick={() => toggleQuestion(index)}
                 className="font-[Poppins-light] w-full text-left px-4 py-4 sm:px-6 flex justify-between items-center focus:outline-none"
               >
-                <span className="font-[Poppins-light] text-[#641311] font-semibold text-sm sm:text-base">
+                <span className="font-[Poppins-light] text-[#000000] font-semibold text-sm sm:text-base">
                   {item.question}
                 </span>
-                <span className="text-[#cc936b] text-lg sm:text-xl">
+                <span className="text-[#000000] text-lg sm:text-xl">
                   {openIndex === index ? '-' : '+'}
                 </span>
               </button>
 
               {/* Resposta - Aparece quando aberto */}
               {openIndex === index && (
-                <div className="px-4 py-4 sm:px-6 bg-[#cc936b]/10">
-                  <p className="font-[Poppins-light] text-gray-700 text-sm sm:text-base">{item.answer}</p>
+                <div className="px-4 py-4 sm:px-6 bg-[#82614A]/10">
+                  <p className="font-[Poppins-light] text-[#000000] text-sm sm:text-base">{item.answer}</p>
                 </div>
               )}
             </div>
@@ -81,7 +81,7 @@ const FAQSection: React.FC = () => {
         </div>
 
         {/* Mensagem final */}
-        <p className="font-[Poppins-light] text-center mt-8 text-[#641311] italic">
+        <p className="font-[Poppins-light] text-center mt-8 text-[#000000] italic">
           Ainda tem dúvidas? Entre em contato conosco!
         </p>
       </div>

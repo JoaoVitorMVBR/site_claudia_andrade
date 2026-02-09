@@ -81,7 +81,7 @@ const Sidebar: React.FC = () => {
           {/* Logo/Title */}
           <div className="flex items-center p-4 h-16 border-b border-gray-200 font-[Poppins-light]">
             <span className="text-xl font-bold text-gray-800 flex items-center">
-              <span className="w-6 h-6 bg-[#641311] rounded-full mr-2"></span>
+              <span className="w-6 h-6 bg-[#ffffff] rounded-full mr-2"></span>
               Gestão de Inventário
             </span>
           </div>
@@ -99,7 +99,7 @@ const Sidebar: React.FC = () => {
                   onClick={handleNavigationClick}
                   className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors 
                     ${isCurrent
-                      ? 'bg-[#641311] text-white shadow-md'
+                      ? 'bg-[#ffffff] text-gray-600 shadow-md hover:bg-gray-100'
                       : 'text-gray-600 hover:bg-gray-100'
                     }`}
                 >

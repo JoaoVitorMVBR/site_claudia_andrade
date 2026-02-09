@@ -22,16 +22,16 @@ const WhyRent: React.FC = () => {
     return (
       <section className="py-12 bg-[#FFFFFF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-[Poppins-light] text-3xl text-[#641311] text-center mb-8 tracking-wide">
+          <h2 className="font-[Poppins-light] text-3xl text-[#000000] text-center mb-8 tracking-wide">
             Por que Alugar um Vestido?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 ">
             {reasons.map((reason, index) => (
               <div
                 key={index}
-                className="bg-white border border-[#cc936b] rounded-lg p-6 shadow-md text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="bg-white border border-[#82614A] rounded-lg p-6 shadow-md text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
-                <h3 className="font-[Poppins-light] text-xl text-[#641311] mb-2">
+                <h3 className="font-[Poppins-light] text-xl text-[#000000] mb-2">
                   {reason.title}
                 </h3>
                 <p className="font-[Poppins-light] text-gray-700 text-sm sm:text-base">

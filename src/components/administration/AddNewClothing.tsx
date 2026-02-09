@@ -405,8 +405,8 @@ const AddNewClothing: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !frontPreview}
-            className={`px-8 py-3 bg-[#641311] text-white rounded-lg font-medium transition flex items-center gap-2 ${
-              loading || !frontPreview ? "opacity-60 cursor-not-allowed" : "hover:bg-[#54100e]"
+            className={`px-8 py-3 border-2 bg-green-50 border-green-300 text-gray-600 rounded-lg font-medium transition flex items-center gap-2 ${
+              loading || !frontPreview ? "opacity-60 cursor-not-allowed" : "hover:bg-green-300"
             }`}
           >
             {loading ? (
