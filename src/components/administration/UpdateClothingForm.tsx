@@ -286,8 +286,8 @@ export default function ClothingForm({ initialData, onSubmit, submitLabel, isEdi
         <button
           type="submit"
           disabled={loading}
-          className={`px-6 py-3 bg-[#ffffff] text-white font-[Poppins-light] rounded-lg shadow-md transition ${
-            loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#54100e]"
+          className={`px-6 py-3 border-2 bg-green-50 border-green-300 text-gray-600 font-[Poppins-light] rounded-lg shadow-md transition ${
+            loading ? "opacity-70 cursor-not-allowed" : "hover:bg-green-300"
           }`}
         >
           {loading ? "Salvando…" : submitLabel}
