@@ -99,7 +99,7 @@ const Sidebar: React.FC = () => {
                   onClick={handleNavigationClick}
                   className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors 
                     ${isCurrent
-                      ? 'bg-[#ffffff] text-white shadow-md'
+                      ? 'bg-[#ffffff] text-gray-600 shadow-md hover:bg-gray-100'
                       : 'text-gray-600 hover:bg-gray-100'
                     }`}
                 >
